@@ -1,7 +1,7 @@
 # Add this to the very top of your script to suppress Vivado's step-by-step command logging
 set_param messaging.defaultLimit 0
 
-set TESTBENCH_TOP "mux4_12"
+set TESTBENCH_TOP "decoder_tb"
 set OUTPUT_DIR "./build"
 
 if {[file exists $OUTPUT_DIR]} {
@@ -29,7 +29,7 @@ foreach file [glob -nocomplain ../sim/*.sv] {
     }   
 }
 
-set elab_output [exec xelab -debug typical -L design_lib -L sim_lib -top design_lib.$TESTBENCH_TOP]
+set elab_output [exec xelab -debug typical -L design_lib -L sim_lib -top sim_lib.$TESTBENCH_TOP]
 
 set output_lines [split $elab_output "\n"]
 

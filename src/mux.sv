@@ -43,4 +43,3 @@ module mux4_12
     mux2_n #(12) outmux(low, high, s[1], y);
 
 endmodule
-
