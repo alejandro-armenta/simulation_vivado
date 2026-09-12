@@ -27,3 +27,20 @@ module mux4_8
     mux2_n outmux(low, high, s[1], y);
 
 endmodule
+
+
+module mux4_12
+    (
+        input logic [11:0] d0, d1, d2, d3,
+        input logic [1:0] s,
+        output logic [11:0] y
+    );
+
+    logic [11:0] low, high;
+
+    mux2_n #(12) lowmux(d0, d1, s[0], low);
+    mux2_n #(12) highmux(d2, d3, s[0], high);
+    mux2_n #(12) outmux(low, high, s[1], y);
+
+endmodule
+
