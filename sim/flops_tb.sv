@@ -24,7 +24,7 @@ module flops_tb();
     initial begin
 
         reset = 0;
-        
+
         d = 4'b0;
 
         @(negedge clk);
@@ -66,8 +66,6 @@ module flops_tb();
         reset = 0;
 
         $finish;
-
-
 
     end
 

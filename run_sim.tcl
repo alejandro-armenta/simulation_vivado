@@ -1,6 +1,4 @@
-#set TOP_MODULE "flopr"
-
-set TESTBENCH_TOP "flops_tb"
+set TESTBENCH_TOP "mux4_8"
 set OUTPUT_DIR "./build"
 
 if {[file exists $OUTPUT_DIR]} {
@@ -12,24 +10,30 @@ file mkdir $OUTPUT_DIR
 cd $OUTPUT_DIR
 
 exec xvlog -sv {*}[glob ../src/*.sv]
-
 exec xvlog -sv {*}[glob ../sim/*.sv]
 
-exec xelab -debug typical -top $TESTBENCH_TOP -snapshot ${TESTBENCH_TOP}_snapshot 
+set elab_output [exec xelab -debug typical -top $TESTBENCH_TOP -snapshot ${TESTBENCH_TOP}_snapshot]
 
-set xsim_cmd_file [open "xsim_cfg.tcl" w]
+puts $elab_output
 
-    puts $xsim_cmd_file "log_wave -r /" 
+# Split xelab output into individual lines
+set output_lines [split $elab_output "\n"]
+set trigger_fail 0
 
-    puts $xsim_cmd_file "create_wave_config"
+foreach line $output_lines {
+    # If any line contains an ERROR, mark as failure
+    if {[regexp "ERROR:" $line]} {
+        set trigger_fail 1
+        break
+    }
+    
+    # If a line contains a WARNING, but IS NOT the library path warning, mark as failure
+    if {[regexp "WARNING:" $line] && ![regexp "XSIM 43-3431" $line]} {
+        set trigger_fail 1
+        break
+    }
+}
 
-    puts $xsim_cmd_file "add_wave /"
-
-    puts $xsim_cmd_file "run all" 
-
-    #puts $xsim_cmd_file "exit" 
-
-close $xsim_cmd_file
-
-exec xsim ${TESTBENCH_TOP}_snapshot -gui -tclbatch xsim_cfg.tcl -wdb "ale_waves.wdb" >@ stdout
-
+if {$trigger_fail} {
+    error "ERROR: xelab finished with real errors or strict warnings. Stopping execution!"
+}
