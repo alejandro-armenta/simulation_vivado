@@ -18,13 +18,15 @@ initial begin
         #10;
 
         if (y !== (1 << i)) begin
-
+            $error("test failed");
         end
         else begin
-            
+            $display("test passed");
         end
         
     end
+
+    $finish;
 
 end
 

@@ -1,67 +1,73 @@
 `timescale 1ns/1ps
 
-module tb_decoder_good;
+module adder_tb;
 
-    parameter N = 3;
-    
-    // Testbench signals
+    // 1. Parameters and Test Width
+    localparam N = 8;
+
+    // 2. Testbench Signals
     logic [N-1:0] a;
-    logic [2**N - 1:0] y;
+    logic [N-1:0] b;
+    logic cin;
     
-    // Verification variables
-    int error_count = 0;
+    logic [N-1:0] s;
+    logic cout;
 
-    // Instantiate the GOOD decoder
-    decoder_good #(.N(N)) dut (
-        .a(a),
-        .y(y)
+    // 3. Instantiate the Device Under Test (DUT)
+    adder #(.N(N)) dut (
+        .a   (a),
+        .b   (b),
+        .cin (cin),
+        .s   (s),
+        .cout(cout)
     );
 
+    // 4. Stimulus Generation and Verification
     initial begin
-        $display("--------------------------------------------------");
-        $display("Starting GOOD Decoder Testbench (Self-Checking)");
-        $display("--------------------------------------------------");
-        
-        // Loop through every possible input value (0 to 7 for N=3)
-        for (int i = 0; i < (2**N); i++) begin
-            
-            // 1. Apply the stimulus
-            a = i;
-            
-            // 2. Wait a microscopic delay (optional, but good for waveform viewing)
-            #10; 
-            
-            // 3. Self-checking logic: Verify if only the i-th bit is set
-            if (y !== (1 << i)) begin
-                $display("[FAIL] Input a = %0d | Expected y = %b | Got y = %b", a, (1 << i), y);
-                error_count++;
-            } else begin
-                $display("[PASS] Input a = %0d | Output y = %b", a, y);
-            end
-        end
+        // Print header for readability in the console
+        $display("Starting Adder Testbench (Width = %0d)...", N);
+        $display("-----------------------------------------");
 
-        // Final report
-        $display("--------------------------------------------------");
-        if (error_count == 0) begin
-            $display(">>> TEST PASSED SUCCESSFULLY! All cases matched. <<<");
-        end else begin
-            $display(">>> TEST FAILED! Total errors: %0d <<<", error_count);
-        end
-        $display("--------------------------------------------------");
-        
+        // Case 1: Simple addition without carry
+        a = 8'd10; b = 8'd20; cin = 1'b0;
+        #10; // Wait for logic to settle
+        assert({cout, s} == (a + b + cin)) 
+            else $error("Case 1 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
+
+        // Case 2: Addition with Carry-In
+        a = 8'd45; b = 8'd55; cin = 1'b1;
+        #10;
+        assert({cout, s} == (a + b + cin)) 
+            else $error("Case 2 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
+
+        // Case 3: Maximum values (Testing Carry-Out / Overflow)
+        a = 8'hFF; b = 8'h01; cin = 1'b0; // 255 + 1 = 256 (Requires 9 bits: cout=1, s=0)
+        #10;
+        assert({cout, s} == (a + b + cin)) 
+            else $error("Case 3 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
+
+        // Case 4: All ones (Absolute maximum stress test)
+        a = 8'hFF; b = 8'hFF; cin = 1'b1;
+        #10;
+        assert({cout, s} == (a + b + cin)) 
+            else $error("Case 4 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
+
+        // Case 5: Zero addition
+        a = 8'd0; b = 8'd0; cin = 1'b0;
+        #10;
+        assert({cout, s} == (a + b + cin)) 
+            else $error("Case 5 Failed! Expected: 0, Got: %0d", {cout, s});
+
+        // Finish simulation
+        $display("-----------------------------------------");
+        $display("Testbench complete. If no errors appeared, your design is correct!");
         $finish;
     end
 
-endmodule
-
-
-// Included the GOOD module here for easy single-file simulation
-module decoder_good #(parameter N = 3) (
-    input  logic [N-1:0] a,
-    output logic [2**N - 1:0] y
-);
-    always_comb begin
-        y = 0;      // GOOD: Instantaneous blocking assignment
-        y[a] = 1;   // GOOD: Instantaneous blocking assignment
+    // Optional: Monitor changes in the console dynamically
+    initial begin
+        $monitor("Time=%0t | a=%d b=%d cin=%b | cout=%b s=%d", 
+                 $time, a, b, cin, cout, s);
     end
+
 endmodule
