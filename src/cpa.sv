@@ -72,3 +72,8 @@ always_ff @( posedge clk, posedge reset ) begin
 end
 
 endmodule
+
+
+module custom();
+
+endmodule

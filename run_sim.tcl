@@ -14,21 +14,42 @@ file mkdir $OUTPUT_DIR
 
 cd $OUTPUT_DIR
 
-foreach file [glob -nocomplain ../src/*.sv] {
-    puts "Compiling standalone: $file"
-    if {[catch { exec xvlog -work design_lib -sv $file } log_out]} {
-        puts $log_out
-        exit 1    
+# Function to generate a .prj file and compile it safely
+proc compile_library {lib_name files} {
+    if {[llength $files] == 0} { return }
+    
+    set prj_filename "${lib_name}.prj"
+
+    set prj_file [open $prj_filename w]
+    
+    # Write files into the project structure cleanly
+    foreach file $files {
+        puts $prj_file "sv $lib_name $file"
     }
+
+    close $prj_file
+    
+    # Run the compiler via the project file
+    puts "Compiling library $lib_name with [llength $files] files..."
+    
+    if {[catch { exec xvlog -work $lib_name -prj $prj_filename } log_out]} {
+        puts $log_out
+        file delete -force $prj_filename
+        exit 1
+    }
+    
+    # Clean up the temporary project file
+    file delete -force $prj_filename
 }
 
-foreach file [glob -nocomplain ../sim/*.sv] {
-    puts "Compiling standalone: $file"
-    if {[catch { exec xvlog -work sim_lib -sv $file } log_out]} {
-        puts $log_out
-        exit 1    
-    }   
-}
+# 1. Compile source files
+set src_files [glob -nocomplain ../src/*.sv]
+compile_library "design_lib" $src_files
+
+# 2. Compile simulation files
+set sim_files [glob -nocomplain ../sim/*.sv]
+compile_library "sim_lib" $sim_files
+
 
 puts "Elaborating design top: $TESTBENCH_TOP into snapshot: $SNAPSHOT_NAME"
 set elab_output [exec xelab -debug typical -L design_lib -L sim_lib -top $TESTBENCH_TOP -snapshot $SNAPSHOT_NAME]  
@@ -44,6 +65,8 @@ foreach line $output_lines {
 
 if {$local_fail} { error "ERROR: xelab finished with errors or strict warnings." }
 
-puts "Launching Vivado Simulator GUI..."
-set ale [exec xsim $SNAPSHOT_NAME --runall]
-puts $ale
+#
+#puts "Launching Vivado Simulator GUI..."
+#set ale [exec xsim $SNAPSHOT_NAME --runall]
+#puts $ale
+#
