@@ -27,3 +27,32 @@ always_comb begin
 end
 
 endmodule
+
+
+module comparator
+#(parameter N = 8)
+(
+    input logic [N-1:0] a, b,
+    output logic eq, neq, lt, leq, gt, gte
+);
+
+always_comb begin 
+
+    eq = (a == b);
+    neq = (a != b);
+    lt = (a < b);
+    leq = (a <= b);
+    gt = (a > b);
+    gte = (a >= b);
+
+
+end
+
+endmodule
+
+module nor32 (
+    input wire [31:0] channels,
+    output wire out_nor
+);
+    assign out_nor = ~(|channels); // Reduction NOR: true only if all bits are 0
+endmodule

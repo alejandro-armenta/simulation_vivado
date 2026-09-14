@@ -17,7 +17,6 @@ foreach file [glob -nocomplain ../src/*.sv] {
         puts $log_out
         exit 1    
     }
-    
 }
 
 foreach file [glob -nocomplain ../sim/*.sv] {

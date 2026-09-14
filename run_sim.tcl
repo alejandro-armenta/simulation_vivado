@@ -14,25 +14,42 @@ file mkdir $OUTPUT_DIR
 
 cd $OUTPUT_DIR
 
-# 1. Compile ALL Design Files in ONE shot (Massive Speedup)
-set src_files [glob -nocomplain ../src/*.sv]
-if {[llength $src_files] > 0} {
-    puts "Compiling all source files incrementally..."     
-    if {[catch { exec xvlog -work design_lib -sv {*}$src_files } log_out]} {         
-        puts "COMPILATION FAILED:\n$log_out"         
-        exit 1         
+foreach file [glob -nocomplain ../src/*.sv] {
+    puts "Compiling standalone: $file"
+    if {[catch { exec xvlog -work design_lib -sv $file } log_out]} {
+        puts $log_out
+        exit 1    
     }
 }
 
-# 2. Compile ALL Simulation Files in ONE shot
-set sim_files [glob -nocomplain ../sim/*.sv]
-if {[llength $sim_files] > 0} {
-    puts "Compiling all simulation files incrementally..."     
-    if {[catch { exec xvlog -work sim_lib -sv {*}$sim_files } log_out]} {         
-        puts "COMPILATION FAILED:\n$log_out"         
-        exit 1         
-    }    
-}  
+foreach file [glob -nocomplain ../sim/*.sv] {
+    puts "Compiling standalone: $file"
+    if {[catch { exec xvlog -work sim_lib -sv $file } log_out]} {
+        puts $log_out
+        exit 1    
+    }   
+}
+
+
+## 1. Compile ALL Design Files in ONE shot (Massive Speedup)
+#set src_files [glob -nocomplain ../src/*.sv]
+#if {[llength $src_files] > 0} {
+#    puts "Compiling all source files incrementally..."     
+#    if {[catch { exec xvlog -work design_lib -sv {*}$src_files } log_out]} {         
+#        puts "COMPILATION FAILED:\n$log_out"         
+#        exit 1         
+#    }
+#}
+#
+## 2. Compile ALL Simulation Files in ONE shot
+#set sim_files [glob -nocomplain ../sim/*.sv]
+#if {[llength $sim_files] > 0} {
+#    puts "Compiling all simulation files incrementally..."     
+#    if {[catch { exec xvlog -work sim_lib -sv {*}$sim_files } log_out]} {         
+#        puts "COMPILATION FAILED:\n$log_out"         
+#        exit 1         
+#    }    
+#}  
 
 puts "Elaborating design top: $TESTBENCH_TOP into snapshot: $SNAPSHOT_NAME"
 set elab_output [exec xelab -debug typical -L design_lib -L sim_lib -top $TESTBENCH_TOP -snapshot $SNAPSHOT_NAME]  
@@ -48,6 +65,6 @@ foreach line $output_lines {
 
 if {$local_fail} { error "ERROR: xelab finished with errors or strict warnings." }
 
-puts "Launching Vivado Simulator GUI..."
-set ale [exec xsim $SNAPSHOT_NAME --runall]
-puts $ale
+#puts "Launching Vivado Simulator GUI..."
+#set ale [exec xsim $SNAPSHOT_NAME --runall]
+#puts $ale
