@@ -56,3 +56,19 @@ module nor32 (
 );
     assign out_nor = ~(|channels); // Reduction NOR: true only if all bits are 0
 endmodule
+
+
+module counter
+#(parameter N = 8)
+(
+    input logic clk,
+    input logic reset,
+    output logic [N-1:0] q
+);
+
+always_ff @( posedge clk, posedge reset ) begin
+    if (reset) q <= 0;
+    else q <= q + 1;
+end
+
+endmodule
