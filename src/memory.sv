@@ -1,4 +1,4 @@
-module memory
+module register_file
 #(
     parameter N = 5,
     parameter M = 32
@@ -42,6 +42,46 @@ end
 task automatic dump_memory();
 
     for(int i = 0; i < (1<<N); i++) begin
+        $display(
+            "%d | %h | %b", 
+            i, 
+            memarray[i], 
+            memarray[i]
+        );
+    end
+
+endtask
+
+endmodule
+
+
+module data_memory
+#(
+    parameter N = 32,
+    parameter DEPTH = 64
+)
+(
+    input logic             CLK, 
+    input logic             WE, 
+    input logic [N-1:0]     A,
+    input logic [N-1:0]     WD,
+    output logic [N-1:0]    RD
+);
+
+logic [N-1:0] memarray[DEPTH-1:0];
+
+
+always_comb begin
+    if (A < DEPTH) begin
+        RD = memarray[A];
+    end else begin
+        RD = {N{1'bx}};
+    end
+end
+
+task automatic dump_memory();
+
+    for(int i = 0; i < DEPTH; i++) begin
         $display(
             "%d | %h | %b", 
             i, 

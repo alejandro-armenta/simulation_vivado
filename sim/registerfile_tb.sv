@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module memory_tb();
+module register_file_tb();
 
 parameter N = 5;
 parameter M = 32;
@@ -15,7 +15,7 @@ logic [M-1:0]    RD2;
 logic [N-1:0]     A3;
 logic [M-1:0]     WD3;
 
-memory dut(
+register_file dut(
     .CLK(CLK),
     .WE3(WE3),
     .A1(A1),

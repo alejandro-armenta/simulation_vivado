@@ -1,6 +1,6 @@
 set_param messaging.defaultLimit 0  
 
-set TESTBENCH_TOP "sim_lib.memory_tb" 
+set TESTBENCH_TOP "sim_lib.datamem_tb" 
 
 set SNAPSHOT_NAME "snapshot"
 
