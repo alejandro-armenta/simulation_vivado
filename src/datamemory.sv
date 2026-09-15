@@ -12,21 +12,29 @@ module data_memory
 );
 
 logic [N-1:0] memarray[DEPTH-1:0];
+logic [N-1:0] word_addr;
+
+
 
 always_ff @(posedge CLK) begin
     if (WE) begin
-        if (A < DEPTH) begin
-            memarray[A] <= WD;    
+        if (word_addr < DEPTH) begin
+            memarray[word_addr] <= WD;    
         end
     end
 end
 
+//this executes when A changes so it is good
 always_comb begin
-    if (A < DEPTH) begin
-        RD = memarray[A];
+    
+    word_addr = A >> 2;
+
+    if (word_addr < DEPTH) begin
+        RD = memarray[word_addr];
     end else begin
         RD = {N{1'bx}};
     end
+
 end
 
 task automatic dump_memory();

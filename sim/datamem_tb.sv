@@ -13,13 +13,17 @@ logic [N-1:0]   WD;
 logic [N-1:0]   RD;
 
 data_memory 
+    #(
+        .N(N),
+        .DEPTH(DEPTH)
+    )
     dut(
-    .CLK(CLK),
-    .WE(WE),
-    .A(A),
-    .WD(WD),
-    .RD(RD)
-);
+        .CLK(CLK),
+        .WE(WE),
+        .A(A),
+        .WD(WD),
+        .RD(RD)
+    );
 
 always begin
     CLK = 0;#5;
@@ -32,25 +36,33 @@ initial begin
 
     #1;
 
-    WE=1;A=0;WD=32'hCAFEBABE;
+    WE=1;A=32'd0;WD=32'hDEADBEEF;
 
     @(posedge CLK);
 
     #1;
 
-    WE=0;A=0;WD=0;
+    WE=0;A=32'd0;WD=0;
+
+    #1;
 
     $display("%h",RD);
 
     #1;
 
-    WE=0;A=DEPTH + 5;WD=0;
+    WE=1;A=32'd4;WD=32'hCAFEBABE;
+
+    @(posedge CLK);
 
     #1;
 
-    $display("Out-of-bounds Addr %0d: Expected = xxxxxxxx, Got = %h", A, RD);
+    WE=0;A=32'd3;WD=0;
 
-    //dut.dump_memory();
+    #1;
+
+    $display("%h",RD);
+
+    dut.dump_memory();
 
     $finish;
 end
