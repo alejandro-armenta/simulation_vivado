@@ -50,4 +50,10 @@ task automatic dump_memory();
 
 endtask
 
+initial begin
+
+    memarray[0] = 32'd10;
+
+end
+
 endmodule

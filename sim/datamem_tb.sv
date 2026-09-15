@@ -34,15 +34,15 @@ initial begin
 
     WE=0;A=0;WD=0;
 
-    #1;
+    #10;
 
-    WE=1;A=32'd0;WD=32'hDEADBEEF;
+    WE=1;A=32'd8;WD=32'hDEADBEEF;
 
     @(posedge CLK);
 
     #1;
 
-    WE=0;A=32'd0;WD=0;
+    WE=0;A=32'd8;WD=0;
 
     #1;
 
@@ -56,13 +56,13 @@ initial begin
 
     #1;
 
-    WE=0;A=32'd3;WD=0;
+    WE=0;A=32'd4;WD=0;
 
     #1;
 
     $display("%h",RD);
 
-    dut.dump_memory();
+    //dut.dump_memory();
 
     $finish;
 end

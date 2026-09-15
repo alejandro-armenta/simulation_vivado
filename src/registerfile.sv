@@ -22,11 +22,13 @@ module register_file
 logic [M-1:0] memarray [(1<<N)-1:0];
 
 
-//synchronous write
+//indexado word
 always_ff @(posedge CLK) begin
 
     if(WE3) begin
-        memarray[A3] <= WD3;
+        if(A3 != 0) begin
+            memarray[A3] <= WD3;
+        end
     end
 
 end
@@ -34,10 +36,16 @@ end
 
 //asynchronous
 always_comb begin
-    RD1 = memarray[A1];
-    RD2 = memarray[A2];
+    RD1 = (A1 == 0) ? {M{1'b0}} : memarray[A1];
+    RD2 = (A2 == 0) ? {M{1'b0}} : memarray[A2];
 end
 
+
+initial begin
+    for(int i = 0; i < (1<<N); i++) begin
+        memarray[i] = {M{1'b0}};
+    end
+end
 
 task automatic dump_memory();
 
