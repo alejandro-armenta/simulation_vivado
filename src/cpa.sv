@@ -74,6 +74,3 @@ end
 endmodule
 
 
-module custom();
-
-endmodule
