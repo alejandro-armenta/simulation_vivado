@@ -1,16 +1,16 @@
 set_param messaging.defaultLimit 0  
 
-set TESTBENCH_TOP "sim_lib.datamem_tb" 
+set TESTBENCH_TOP "sim_lib.instruction_memory_tb" 
 
 set SNAPSHOT_NAME "snapshot"
 
 set OUTPUT_DIR "./build"  
 
-if {[file exists $OUTPUT_DIR]} {
-    file delete -force $OUTPUT_DIR
-}
+#if {[file exists $OUTPUT_DIR]} {
+#    file delete -force $OUTPUT_DIR
+#}
 
-file mkdir $OUTPUT_DIR
+#file mkdir $OUTPUT_DIR
 
 cd $OUTPUT_DIR
 
