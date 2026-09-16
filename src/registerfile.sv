@@ -33,8 +33,6 @@ always_ff @(posedge CLK) begin
 
 end
 
-
-
 always_comb begin
     RD1 = (A1 == 0) ? {M{1'b0}} : memarray[A1];
     RD2 = (A2 == 0) ? {M{1'b0}} : memarray[A2];
