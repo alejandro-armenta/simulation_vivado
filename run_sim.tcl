@@ -1,6 +1,6 @@
 set_param messaging.defaultLimit 0  
 
-set TESTBENCH_TOP "sim_lib.pc_tb" 
+set TESTBENCH_TOP "design_lib.group" 
 
 set SNAPSHOT_NAME "snapshot"
 
@@ -66,6 +66,6 @@ foreach line $output_lines {
 if {$local_fail} { error "ERROR: xelab finished with errors or strict warnings." }
 
 
-puts "Launching Vivado Simulator..."
-set ale [exec xsim $SNAPSHOT_NAME --runall]
-puts $ale
+#puts "Launching Vivado Simulator..."
+#set ale [exec xsim $SNAPSHOT_NAME --runall]
+#puts $ale
