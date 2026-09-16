@@ -49,8 +49,25 @@ initial begin
 
     $display("%0d %b", $signed(aluresult), zero);
 
-    
+    #1;
 
+    srca = 32'd5;srcb = 32'd15;alucontrol = 3'b101;#1;
+
+    $display("%0d %b", $signed(aluresult), zero);
+
+    #1;
+
+    srca = 32'hFFFFFFFB; srcb = 32'd3; alucontrol = 3'b101;#1;
+
+    $display("%0d %b", $signed(aluresult), zero);
+
+    #1;
+
+    srca = 32'd10; srcb = 32'd10; alucontrol = 3'b101; #1;
+
+    $display("%0d %b", $signed(aluresult), zero);
+
+    
 end
 
 
