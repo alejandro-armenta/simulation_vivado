@@ -32,3 +32,53 @@ module fetch_cycle #(
     );
 
 endmodule
+
+
+`timescale 1ns/1ps
+
+module fetch_cycle_tb;
+
+    parameter N = 32;
+
+    logic             CLK;
+    logic             RESET;
+    logic [N-1:0]     PC_OUT;
+
+    // Instantiate our top-level loop module
+    fetch_cycle #(
+        .N(N)
+    ) dut (
+        .CLK(CLK),
+        .RESET(RESET),
+        .PC_OUT(PC_OUT)
+    );
+
+    // Clock Generator (100MHz / 10ns period)
+    always begin
+        CLK = 0;
+        #5;
+        CLK = 1;
+        #5;
+    end
+
+    // Stimulus Process
+    initial begin
+        RESET = 1;
+        @(posedge CLK);
+        #1;
+        RESET = 0; // Release reset to start sequential counting
+
+        $display("--- Testing PC + Adder Loop ---");
+        
+        // Let it run for 5 clock cycles and observe the auto-increment
+        repeat (5) begin
+            @(posedge CLK);
+            #1; // Wait a moment after the edge for propagation
+            $display("Clock Tick! Current PC Address = %0d (0x%h)", PC_OUT, PC_OUT);
+        end
+
+        $display("\n--- Loop Test Bench Complete ---");
+        $finish;
+    end
+
+endmodule

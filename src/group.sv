@@ -14,15 +14,18 @@ always_comb begin
     PCOUT = pc;
 end
 
-program_counter ale(
+program_counter register(
     .CLK(CLK), 
-    .RESET(RESET), 
+    .RESET(RESET),       
     .PCNext(pcnext),
+
+    //pcnext = pc + 4 se guarda en pc guardado en pc
     .PC(pc)
     );
 
 adder_4 adder(
     .PC(pc),
+    //aqui te va a poner pc + 4
     .PCPlus4(pcnext)
 );
 
