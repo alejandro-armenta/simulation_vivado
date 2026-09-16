@@ -111,3 +111,110 @@ module alu #(
 
 endmodule
 
+`timescale 1ns/1ps
+
+module alu_tb;
+
+    // Parameters
+    parameter N = 32;
+
+    // Testbench Signals
+    logic [N-1:0] srca;
+    logic [N-1:0] srcb;
+    logic [2:0]   alucontrol;
+    logic [N-1:0] aluresult;
+    logic         zero;
+
+    // Instantiate the Device Under Test (DUT)
+    alu #(
+        .N(N)
+    ) dut (
+        .srca(srca),
+        .srcb(srcb),
+        .alucontrol(alucontrol),
+        .aluresult(aluresult),
+        .zero(zero)
+    );
+
+    // Stimulus Process
+    initial begin
+        $display("--- Starting ALU Testbench ---");
+
+        // --- TEST 1: ADD (3'b000) ---
+        $display("\n[Test 1] ADD: 10 + 20");
+        srca = 32'd10;
+        srcb = 32'd20;
+        alucontrol = 3'b000;
+        #1; // Wait for combinational evaluation
+        $display("Result = %0d, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'd30 || zero !== 1'b0) $error("ADD failed!");
+
+        // --- TEST 2: SUB (3'b001) ---
+        $display("\n[Test 2] SUB: 50 - 15");
+        srca = 32'd50;
+        srcb = 32'd15;
+        alucontrol = 3'b001;
+        #1;
+        $display("Result = %0d, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'd35 || zero !== 1'b0) $error("SUB failed!");
+
+        // --- TEST 3: Zero Flag Verification ---
+        $display("\n[Test 3] SUB resulting in Zero: 25 - 25");
+        srca = 32'd25;
+        srcb = 32'd25;
+        alucontrol = 3'b001;
+        #1;
+        $display("Result = %0d, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'd0 || zero !== 1'b1) $error("Zero flag tracking failed!");
+
+        // --- TEST 4: AND (3'b010) ---
+        $display("\n[Test 4] Bitwise AND: 32'h00FF_FFFF & 32'hFFFF_FF00");
+        srca = 32'h00FF_FFFF;
+        srcb = 32'hFFFF_FF00;
+        alucontrol = 3'b010;
+        #1;
+        $display("Result = %h, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'h00FF_FF00) $error("AND failed!");
+
+        // --- TEST 5: OR (3'b011) ---
+        $display("\n[Test 5] Bitwise OR: 32'hF000_0000 | 32'h0000_000F");
+        srca = 32'hF000_0000;
+        srcb = 32'h0000_000F;
+        alucontrol = 3'b011;
+        #1;
+        $display("Result = %h, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'hF000_000F) $error("OR failed!");
+
+        // --- TEST 6: SLT (3'b101) Positive Comparison ---
+        $display("\n[Test 6] SLT: 5 < 15 (Should be True -> 1)");
+        srca = 32'd5;
+        srcb = 32'd15;
+        alucontrol = 3'b101;
+        #1;
+        $display("Result = %0d, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'd1) $error("SLT positive comparison failed!");
+
+        // --- TEST 7: SLT (3'b101) Signed Negative Comparison ---
+        // 32'hFFFFFFFB is -5 in two's complement.
+        $display("\n[Test 7] SLT Signed Check: -5 < 3 (Should be True -> 1)");
+        srca = 32'hFFFFFFFB; // -5
+        srcb = 32'd3;         // 3
+        alucontrol = 3'b101;
+        #1;
+        $display("Result = %0d, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'd1) $error("SLT Signed operation failed! Checked unsigned instead of signed.");
+
+        // --- TEST 8: SLT (3'b101) False Condition ---
+        $display("\n[Test 8] SLT False Condition: 20 < 10 (Should be False -> 0)");
+        srca = 32'd20;
+        srcb = 32'd10;
+        alucontrol = 3'b101;
+        #1;
+        $display("Result = %0d, Zero = %b", aluresult, zero);
+        if (aluresult !== 32'd0 || zero !== 1'b1) $error("SLT false evaluation failed!");
+
+        $display("\n--- ALU Testbench Finished Successfully ---");
+        $finish;
+    end
+
+endmodule

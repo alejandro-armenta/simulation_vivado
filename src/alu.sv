@@ -25,9 +25,15 @@ always_comb begin
 
         3'b101: begin 
             
-            logic signed slt = ($signed(srca) < $signed(srcb));
+            logic slt;
 
-            aluresult =  slt ? {{{N-1}{1'b0}}, 1'b1} : {N{1'b0}}; 
+            logic [N-2:0] padding; 
+            
+            slt = ($signed(srca) < $signed(srcb));
+
+            padding = {(N-1){1'b0}};
+
+            aluresult =  slt ? {padding, 1'b1} : {N{1'b0}}; 
 
         end
 
@@ -36,7 +42,7 @@ always_comb begin
     endcase
 
     zero = (aluresult == {N{1'b0}});
-    
+
 end
 
 
