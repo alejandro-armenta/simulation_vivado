@@ -1,20 +1,33 @@
-module program_counter
+module group
 #(parameter N = 32)
 (
     input logic CLK,
     input logic RESET,
-    input logic [N-1:0] PCNext,
-    output logic [N-1:0] PC
+
+    output logic [N-1:0] PCOUT
 );
 
-always_ff @(posedge CLK, posedge RESET) begin
+logic [N-1:0] pcnext;
+logic [N-1:0] pc;
 
-    if (RESET) begin
-        PC <= {N{1'b0}};    
-    end else begin
-        PC <= PCNext;
-    end
-
+always_comb begin
+    PCOUT = pc;
 end
 
+program_counter register(
+    .CLK(CLK), 
+    .RESET(RESET),       
+    .PCNext(pcnext),
+
+    //pcnext = pc + 4 se guarda en pc guardado en pc
+    .PC(pc)
+    );
+
+adder_4 adder(
+    .PC(pc),
+    //aqui te va a poner pc + 4
+    .PCPlus4(pcnext)
+);
+
 endmodule
+

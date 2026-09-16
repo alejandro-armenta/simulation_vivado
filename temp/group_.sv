@@ -82,3 +82,32 @@ module fetch_cycle_tb;
     end
 
 endmodule
+
+
+module alu #(
+    parameter M = 32
+) (
+    input  logic [M-1:0] SrcA,       // Operand A (typically from Register File RD1)
+    input  logic [M-1:0] SrcB,       // Operand B (from Register File RD2 or Immediate value)
+    input  logic [2:0]   ALUControl, // Control signal choosing the operation
+    output logic [M-1:0] ALUResult,  // Output data path
+    output logic         Zero        // High if ALUResult is completely 0 (for branches)
+);
+
+    always_comb begin
+        case (ALUControl)
+            3'b000:  ALUResult = SrcA + SrcB;                      // ADD
+            3'b001:  ALUResult = SrcA - SrcB;                      // SUB
+            3'b010:  ALUResult = SrcA & SrcB;                      // AND
+            3'b011:  ALUResult = SrcA | SrcB;                      // OR
+            3'b101:  ALUResult = ($signed(SrcA) < $signed(SrcB)) ?  // SLT (Signed Comparison)
+                                 {{(M-1){1'b0}}, 1'b1} : {M{1'b0}};
+            default: ALUResult = {M{1'bx}};                        // Undefined op code
+        endcase
+    end
+
+    // The Zero flag is set to 1 if the ALU result equals 0, otherwise it is 0.
+    assign Zero = (ALUResult == {M{1'b0}});
+
+endmodule
+

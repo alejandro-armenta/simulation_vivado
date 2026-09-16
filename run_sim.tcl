@@ -66,6 +66,6 @@ foreach line $output_lines {
 if {$local_fail} { error "ERROR: xelab finished with errors or strict warnings." }
 
 
-puts "Launching Vivado Simulator..."
-set ale [exec xsim $SNAPSHOT_NAME --runall]
-puts $ale
+#puts "Launching Vivado Simulator..."
+#set ale [exec xsim $SNAPSHOT_NAME --runall]
+#puts $ale
