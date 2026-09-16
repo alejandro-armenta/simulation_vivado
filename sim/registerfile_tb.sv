@@ -10,8 +10,10 @@ logic             CLK;
 logic             WE3;
 logic [N-1:0]     A1;
 logic [M-1:0]    RD1;
+
 logic [N-1:0]     A2;
 logic [M-1:0]    RD2;
+
 logic [N-1:0]     A3;
 logic [M-1:0]     WD3;
 
@@ -37,40 +39,52 @@ initial begin
     A1 = 0;
     A2 = 0;
     A3 = 0;
-    WD3 = 0;#5;
+    WD3 = 0;
+    
+    #10;
 
-    @(negedge CLK);
     WE3 = 1;
-    A3 = 5'd10;
+    A3 = 5'd6;
     WD3 = 32'hDEADBEEF;
     
     //writing
     @(posedge CLK);
-
-    @(negedge CLK);
-    WE3 = 0;
-
-
-    @(negedge CLK);
-    WE3 = 1;
-    A3 = 5'd20;
-    WD3 = 32'hCAFEBABE;
+    #1;
     
-    //writing
-    @(posedge CLK);
+    WE3 = 1;
+    A3 = 5'd10;
+    WD3 = 32'hCAFEBABE;
 
-    @(negedge CLK);
+    @(posedge CLK);
+    #1;
+
+    WE3 = 0;
+    
+    //esta parte es asincrona
+    A1 = 5'd6;
+    A2 = 5'd10;
+
+    #1;
+    $display("%h", RD1);
+    $display("%h", RD2);
+
+    WE3 = 1;
+    A3 = 5'd0;
+    WD3 = 32'hFFFFFFFF;
+
+    @(posedge CLK);
+    #1;
+
     WE3 = 0;
 
-    #5;
+    A1 = 5'd0;
 
-    A1 = 5'd10;
-    A2 = 5'd20;#1;
+    #1;
 
-    $display("%h",RD1);
-    $display("%h",RD2);
+    $display("%h", RD1);
 
     dut.dump_memory();
+    
 
     $finish;
 end

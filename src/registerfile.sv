@@ -22,7 +22,7 @@ module register_file
 logic [M-1:0] memarray [(1<<N)-1:0];
 
 
-//indexado word
+//you cannot write to 0
 always_ff @(posedge CLK) begin
 
     if(WE3) begin
@@ -34,7 +34,7 @@ always_ff @(posedge CLK) begin
 end
 
 
-//asynchronous
+
 always_comb begin
     RD1 = (A1 == 0) ? {M{1'b0}} : memarray[A1];
     RD2 = (A2 == 0) ? {M{1'b0}} : memarray[A2];
@@ -45,6 +45,9 @@ initial begin
     for(int i = 0; i < (1<<N); i++) begin
         memarray[i] = {M{1'b0}};
     end
+
+    memarray[9] = 32'h4;
+    memarray[5] = 32'h6;
 end
 
 task automatic dump_memory();
