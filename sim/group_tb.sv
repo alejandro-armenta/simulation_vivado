@@ -2,14 +2,26 @@
 
 module group_tb();
 
-parameter N = 32;
+    parameter N = 32;
+    parameter DEPTH = 64;
 
     logic CLK;
     logic RESET;
 
-    logic [N-1:0] PCOUT;
+    logic [N-1:0] OUT_INST;
 
-    group dut(.CLK(CLK), .RESET(RESET), .PCOUT(PCOUT));
+    group 
+
+        #(
+            .N(N),
+            .DEPTH(DEPTH)
+        )
+
+        dut(
+            .CLK(CLK), 
+            .RESET(RESET), 
+            .OUT_INST(OUT_INST)
+        );
 
     always begin
         CLK=0;#5;
@@ -19,20 +31,27 @@ parameter N = 32;
 
     initial begin 
         RESET = 1;
-        #1;
+        #20;
+        
+        $display("%h", OUT_INST);
+
         RESET = 0;
-        #1;
 
-        $display("%h", PCOUT);
+        repeat (3) begin
 
-        repeat (5) begin 
             @(posedge CLK);
             #1;
 
-            $display("%h", PCOUT);
+            $display("%h", OUT_INST);
 
         end
+        
         $finish;
+    end
+
+
+    initial begin
+        //$monitor("%t %h", $time, OUT_INST);
     end
 
 
