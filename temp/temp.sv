@@ -1,73 +1,54 @@
-`timescale 1ns/1ps
-
-module adder_tb;
-
-    // 1. Parameters and Test Width
-    localparam N = 8;
-
-    // 2. Testbench Signals
-    logic [N-1:0] a;
-    logic [N-1:0] b;
-    logic cin;
+module instruction_decoder (
+    input  logic [31:0] instruction,
     
-    logic [N-1:0] s;
-    logic cout;
+    // Fields passed directly to Register File
+    output logic [4:0]  rs1,        // Source Register 1
+    output logic [4:0]  rs2,        // Source Register 2
+    output logic [4:0]  rd,         // Destination Register
+    
+    // Control fields for the Control Unit / ALU
+    output logic [6:0]  opcode,
+    output logic [2:0]  funct3,
+    output logic [6:0]  funct7
+);
 
-    // 3. Instantiate the Device Under Test (DUT)
-    adder #(.N(N)) dut (
-        .a   (a),
-        .b   (b),
-        .cin (cin),
-        .s   (s),
-        .cout(cout)
-    );
+    // RISC-V fields are always at fixed bit positions
+    assign opcode = instruction[6:0];
+    assign rd     = instruction[11:7];
+    assign funct3 = instruction[14:12];
+    assign rs1    = instruction[19:15];
+    assign rs2    = instruction[24:20];
+    assign funct7 = instruction[31:25];
 
-    // 4. Stimulus Generation and Verification
-    initial begin
-        // Print header for readability in the console
-        $display("Starting Adder Testbench (Width = %0d)...", N);
-        $display("-----------------------------------------");
+endmodule
 
-        // Case 1: Simple addition without carry
-        a = 8'd10; b = 8'd20; cin = 1'b0;
-        #10; // Wait for logic to settle
-        assert({cout, s} == (a + b + cin)) 
-            else $error("Case 1 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
 
-        // Case 2: Addition with Carry-In
-        a = 8'd45; b = 8'd55; cin = 1'b1;
-        #10;
-        assert({cout, s} == (a + b + cin)) 
-            else $error("Case 2 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
+module register_file #(
+    parameter N = 32
+) (
+    input  logic         CLK,
+    input  logic         WE3,        // Write Enable (from Control Unit)
+    input  logic [4:0]   A1,         // Read Address 1 (rs1)
+    input  logic [4:0]   A2,         // Read Address 2 (rs2)
+    input  logic [4:0]   A3,         // Write Address (rd)
+    input  logic [N-1:0] WD3,        // Write Data (Result from ALU or Memory)
+    output logic [N-1:0] RD1,        // Read Data 1
+    output logic [N-1:0] RD2         // Read Data 2
+);
 
-        // Case 3: Maximum values (Testing Carry-Out / Overflow)
-        a = 8'hFF; b = 8'h01; cin = 1'b0; // 255 + 1 = 256 (Requires 9 bits: cout=1, s=0)
-        #10;
-        assert({cout, s} == (a + b + cin)) 
-            else $error("Case 3 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
+    // 32 registers, each N-bits wide
+    logic [N-1:0] rf [31:0];
 
-        // Case 4: All ones (Absolute maximum stress test)
-        a = 8'hFF; b = 8'hFF; cin = 1'b1;
-        #10;
-        assert({cout, s} == (a + b + cin)) 
-            else $error("Case 4 Failed! Expected: %0d, Got: %0d", (a+b+cin), {cout, s});
+    // Combinational Read (Asynchronous)
+    // In RISC-V, register x0 is hardwired to 0
+    assign RD1 = (A1 == 5'b0) ? {N{1'b0}} : rf[A1];
+    assign RD2 = (A2 == 5'b0) ? {N{1'b0}} : rf[A2];
 
-        // Case 5: Zero addition
-        a = 8'd0; b = 8'd0; cin = 1'b0;
-        #10;
-        assert({cout, s} == (a + b + cin)) 
-            else $error("Case 5 Failed! Expected: 0, Got: %0d", {cout, s});
-
-        // Finish simulation
-        $display("-----------------------------------------");
-        $display("Testbench complete. If no errors appeared, your design is correct!");
-        $finish;
-    end
-
-    // Optional: Monitor changes in the console dynamically
-    initial begin
-        $monitor("Time=%0t | a=%d b=%d cin=%b | cout=%b s=%d", 
-                 $time, a, b, cin, cout, s);
+    // Synchronous Write (Writes on rising edge if enabled)
+    always_ff @(posedge CLK) begin
+        if (WE3 && (A3 != 5'b0)) begin
+            rf[A3] <= WD3;
+        end
     end
 
 endmodule
