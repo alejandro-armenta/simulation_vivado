@@ -7,47 +7,69 @@ module group
 
     (
         input logic CLK,
-        input logic RESET,
-
-        output logic [N-1:0] OUT_INST
+        input logic RESET
     );
 
-logic [N-1:0] pcnext;
-logic [N-1:0] pc;
+    logic [N-1:0] pcnext;
+    logic [N-1:0] pc;
+    logic [N-1:0] instruction;
 
-program_counter 
+    program_counter 
 
-    #(.N(N)) 
+        #(.N(N)) 
 
-    register(
-        .CLK(CLK), 
-        .RESET(RESET),       
-        .PCNext(pcnext),
+        register(
+            .CLK(CLK), 
+            .RESET(RESET),       
+            .PCNext(pcnext),
 
-        .PC(pc)
+            .PC(pc)
+            );
+
+    adder_4 
+
+        #(.N(N)) 
+
+        adder(
+            .PC(pc),
+            
+            .PCPlus4(pcnext)
         );
 
-adder_4 
+    instruction_memory 
 
-    #(.N(N)) 
+        #(
+            .N(N),
+            .DEPTH(DEPTH)
+        )
 
-    adder(
-        .PC(pc),
-        
-        .PCPlus4(pcnext)
-    );
+        mem(
+            .A(pc),
 
-instruction_memory 
+            .RD(instruction)
+        );
 
-    #(
-        .N(N),
-        .DEPTH(DEPTH)
-    )
+    logic [4:0] rs1;
+    logic [4:0] rs2;
+    logic [4:0] dr;
+    logic [6:0] opcode;
+    logic [2:0] funct3;
+    logic [6:0] func7;
 
-    mem(
-        .A(pc),
-        .RD(OUT_INST)
-    );
+    decoder 
+    
+        dec(
+            .instruction(instruction),
+            .rs1(rs1),
+            .rs2(rs2),
+            .dr(dr),
+            .opcode(opcode),
+            .funct3(funct3),
+            .func7(func7)
+        );
+
+    register_file regFile();
+
 
 
 endmodule

@@ -52,3 +52,83 @@ module register_file #(
     end
 
 endmodule
+
+
+module group #(
+    parameter N = 32,
+    parameter DEPTH = 64
+) (
+    input  logic         CLK,
+    input  logic         RESET,
+    
+    // Inputs for Writeback Stage (needed to write back data into registers)
+    input  logic         REG_WRITE,  // Connect this to Control Unit Write Enable
+    input  logic [N-1:0] WRITE_DATA, // Connect this to ALU Result or Data Memory output
+    
+    // Outputs representing the currently decoded state
+    output logic [N-1:0] OUT_INST,
+    output logic [N-1:0] REG_DATA_1, // rs1 contents (goes to ALU)
+    output logic [N-1:0] REG_DATA_2  // rs2 contents (goes to ALU or Immediate Mux)
+);
+
+    // Internal routing wires
+    logic [N-1:0] pcnext;
+    logic [N-1:0] pc;
+    
+    // Decoded register index addresses
+    logic [4:0]   rs1_addr;
+    logic [4:0]   rs2_addr;
+    logic [4:0]   rd_addr;
+    
+    // Decoded opcodes for your upcoming Control Unit
+    logic [6:0]   opcode;
+    logic [2:0]   funct3;
+    logic [6:0]   funct7;
+
+    // 1. PC Register
+    program_counter #(.N(N)) register (
+        .CLK   (CLK), 
+        .RESET (RESET),       
+        .PCNext(pcnext),
+        .PC    (pc)
+    );
+
+    // 2. PC Adder (+4)
+    adder_4 #(.N(N)) adder (
+        .PC     (pc),
+        .PCPlus4(pcnext)
+    );
+
+    // 3. Instruction Memory
+    instruction_memory #(
+        .N(N),
+        .DEPTH(DEPTH)
+    ) mem (
+        .A (pc),
+        .RD(OUT_INST)
+    );
+
+    // 4. NEW: Instruction Decoder
+    instruction_decoder decoder (
+        .instruction(OUT_INST),
+        .rs1        (rs1_addr),
+        .rs2        (rs2_addr),
+        .rd         (rd_addr),
+        .opcode     (opcode),
+        .funct3     (funct3),
+        .funct7     (funct7)
+    );
+
+    // 5. NEW: Register File
+    register_file #(.N(N)) regfile (
+        .CLK(CLK),
+        .WE3(REG_WRITE),   // Driven by execution control logic
+        .A1 (rs1_addr),    // rs1 from decoder
+        .A2 (rs2_addr),    // rs2 from decoder
+        .A3 (rd_addr),     // rd from decoder
+        .WD3(WRITE_DATA),  // Data from writeback
+        .RD1(REG_DATA_1),  // Output data 1
+        .RD2(REG_DATA_2)   // Output data 2
+    );
+
+endmodule
