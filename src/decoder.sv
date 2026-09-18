@@ -27,5 +27,6 @@ module decoder
         func7   = instruction[31:25];
 
     end
-
+    
 endmodule
+    

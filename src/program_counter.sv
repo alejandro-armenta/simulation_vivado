@@ -68,8 +68,7 @@ module group
             .func7(func7)
         );
 
-    register_file regFile();
-
+    //register_file regFile();
 
 
 endmodule

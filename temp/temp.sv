@@ -132,3 +132,87 @@ module group #(
     );
 
 endmodule
+
+
+module group #(
+    parameter ADDR_WIDTH = 5,   // Was N in your register file
+    parameter DATA_WIDTH = 32,  // Was M in your register file
+    parameter DEPTH      = 64
+) (
+    input  logic                  CLK,
+    input  logic                  RESET,
+
+    // Inputs for Writeback (to write back data into the register file)
+    input  logic                  REG_WRITE,  // Connects to WE3
+    input  logic [DATA_WIDTH-1:0] WRITE_DATA, // Connects to WD3
+
+    // Outputs representing the currently decoded state
+    output logic [DATA_WIDTH-1:0] OUT_INST,
+    output logic [DATA_WIDTH-1:0] REG_DATA_1, // Connects to RD1
+    output logic [DATA_WIDTH-1:0] REG_DATA_2  // Connects to RD2
+);
+
+    // Internal wires for the program counter loop
+    logic [DATA_WIDTH-1:0] pcnext;
+    logic [DATA_WIDTH-1:0] pc;
+
+    // Decoded register address indices
+    logic [ADDR_WIDTH-1:0] rs1_addr;
+    logic [ADDR_WIDTH-1:0] rs2_addr;
+    logic [ADDR_WIDTH-1:0] rd_addr;
+
+    // 1. Program Counter Register
+    program_counter #(
+        .N(DATA_WIDTH)
+    ) register (
+        .CLK   (CLK), 
+        .RESET (RESET),       
+        .PCNext(pcnext),
+        .PC    (pc)
+    );
+
+    // 2. PC Adder (+4)
+    adder_4 #(
+        .N(DATA_WIDTH)
+    ) adder (
+        .PC     (pc),
+        .PCPlus4(pcnext)
+    );
+
+    // 3. Instruction Memory
+    instruction_memory #(
+        .N    (DATA_WIDTH),
+        .DEPTH(DEPTH)
+    ) mem (
+        .A (pc),
+        .RD(OUT_INST)
+    );
+
+    // 4. Instruction Decoder
+    // Splits the raw bits into individual address ports
+    instruction_decoder decoder (
+        .instruction(OUT_INST),
+        .rs1        (rs1_addr),
+        .rs2        (rs2_addr),
+        .rd         (rd_addr),
+        .opcode     (), // Left open if not yet exposed at top-level
+        .funct3     (),
+        .funct7     ()
+    );
+
+    // 5. Your exact Register File Module integrated
+    register_file #(
+        .N(ADDR_WIDTH), // Maps to N (Address width, e.g., 5 bits)
+        .M(DATA_WIDTH)  // Maps to M (Data width, e.g., 32 bits)
+    ) regfile (
+        .CLK(CLK),
+        .WE3(REG_WRITE),
+        .A1 (rs1_addr),
+        .RD1(REG_DATA_1),
+        .A2 (rs2_addr),
+        .RD2(REG_DATA_2),
+        .A3 (rd_addr),
+        .WD3(WRITE_DATA)
+    );
+
+endmodule
