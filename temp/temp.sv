@@ -216,3 +216,128 @@ module group #(
     );
 
 endmodule
+
+
+
+`timescale 1ns/1ps
+
+module tb_group();
+
+    // 1. Parameters matching your design
+    localparam ADDRESS_WIDTH = 5;
+    localparam DATA_WIDTH    = 32;
+    localparam DEPTH         = 64;
+    localparam CLK_PERIOD    = 10; // 100MHz clock
+
+    // 2. Testbench signals
+    logic                    CLK;
+    logic                    RESET;
+    logic                    WE3;
+    logic [ADDRESS_WIDTH-1:0] A3;
+    logic [DATA_WIDTH-1:0]    WD3;
+
+    logic [DATA_WIDTH-1:0]    REG_DATA_1;
+    logic [DATA_WIDTH-1:0]    REG_DATA_2;
+
+    // 3. Instantiate the Device Under Test (DUT)
+    group #(
+        .ADDRESS_WIDTH(ADDRESS_WIDTH),
+        .DATA_WIDTH(DATA_WIDTH),
+        .DEPTH(DEPTH)
+    ) dut (
+        .CLK(CLK),
+        .RESET(RESET),
+        .WE3(WE3),
+        .A3(A3),
+        .WD3(WD3),
+        .REG_DATA_1(REG_DATA_1),
+        .REG_DATA_2(REG_DATA_2)
+    );
+
+    // 4. Clock Generation (Runs continuously)
+    initial begin
+        CLK = 0;
+        forever #(CLK_PERIOD/2) CLK = ~CLK;
+    end
+
+    // 5. Stimulus Block
+    initial begin
+        // Initialize inputs to safe values
+        RESET = 1;
+        WE3   = 0;
+        A3    = 0;
+        WD3   = 0;
+
+        // Display current loaded instructions at startup
+        #1;
+        $display("========================================");
+        $display("--- INITIAL INSTRUCTION MEMORY DUMP ----");
+        $display("========================================");
+        dut.mem.dump_memory(); // Hierarchical call to your memory function
+        $display("========================================\n");
+
+        // Release reset after 2 clock cycles
+        #(CLK_PERIOD * 2);
+        @(negedge CLK);
+        RESET = 0;
+        $display("[TB INFO] Reset released. Starting execution...\n");
+
+        // Let the processor run for 15 clock cycles
+        // Watch your wave viewer or console to track PC changes and register data
+        repeat (15) begin
+            @(posedge CLK);
+            // Optional: You can add runtime displays here to track instructions
+            $display("Time: %0t | PC: %h | Inst: %h", $time, dut.pc, dut.instruction);
+        end
+
+        // Example: Simulating a synchronous manual register file write from the outside
+        $display("\n[TB INFO] Testing external manual write to Register file...");
+        @(negedge CLK);
+        WE3 = 1;
+        A3  = 5;          // Target register x5
+        WD3 = 32'hDEADBEEF; // Data to write
+        
+        @(posedge CLK);   // Data latches on next positive edge
+        #(CLK_PERIOD/2);  // Wait briefly to allow propagation
+        WE3 = 0;          // Turn off write enable
+
+        // End simulation safely
+        $display("\n[TB INFO] Simulation finished.");
+        $finish;
+    end
+
+    // 6. Optional: Monitor signal changes in the console
+    initial begin
+        $monitor("At time %0t: REG_DATA_1 = %h, REG_DATA_2 = %h", 
+                 $time, REG_DATA_1, REG_DATA_2);
+    end
+
+endmodule
+
+
+    // Enhanced Internal Signal Debug Monitor
+    initial begin
+        // Print header for readable log columns
+        $display("\n%-10s | %-8s | %-8s | %-3s (%-8s) | %-3s (%-8s)", 
+                 "Time", "PC", "Inst", "A1", "REG_DATA_1", "A2", "REG_DATA_2");
+        $display("---------------------------------------------------------------------------------");
+        
+        forever begin
+            // Sample values right after the positive clock edge when signals have stabilized
+            @(posedge CLK);
+            #(CLK_PERIOD / 10); // Tiny delay to allow combinational logic (decoder) to settle
+            
+            // Only print if Reset is inactive so the log stays clean during startup
+            if (!RESET) begin
+                $display("%-10t | %-8h | %-8h | x%-20d (%-8h) | x%-20d (%-8h)", 
+                         $time, 
+                         dut.pc, 
+                         dut.instruction, 
+                         dut.rs1,        // Probing internal decoder output / RegFile A1 input
+                         REG_DATA_1,     // Top-level output
+                         dut.rs2,        // Probing internal decoder output / RegFile A2 input
+                         REG_DATA_2      // Top-level output
+                );
+            end
+        end
+    end

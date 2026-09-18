@@ -1,26 +1,40 @@
 `timescale 1ns/1ps;
 
 module group_tb();
-
-    parameter N = 32;
+  
+    parameter ADDRESS_WIDTH = 5;
+    parameter DATA_WIDTH = 32;
     parameter DEPTH = 64;
 
     logic CLK;
     logic RESET;
 
-    logic [N-1:0] OUT_INST;
+    logic WE3;
+    logic [ADDRESS_WIDTH-1:0] A3;
+    logic [DATA_WIDTH-1:0] WD3;
+
+    logic [DATA_WIDTH-1:0] REG_DATA_1;
+    logic [DATA_WIDTH-1:0] REG_DATA_2;
+ 
 
     group 
 
         #(
-            .N(N),
+            .ADDRESS_WIDTH(ADDRESS_WIDTH),
+            .DATA_WIDTH(DATA_WIDTH),
             .DEPTH(DEPTH)
         )
 
         dut(
             .CLK(CLK), 
-            .RESET(RESET), 
-            .OUT_INST(OUT_INST)
+            .RESET(RESET),
+            
+            .WE3(WE3),
+            .A3(A3),
+            .WD3(WD3),
+
+            .REG_DATA_1(REG_DATA_1),
+            .REG_DATA_2(REG_DATA_2)
         );
 
     always begin
@@ -30,19 +44,26 @@ module group_tb();
 
 
     initial begin 
-        RESET = 1;
-        #20;
-        
-        $display("%h", OUT_INST);
 
+        #1;
+
+        RESET = 1;
+
+        WE3 = 0;
+        A3 = 0;
+        WD3 = 0;
+
+        //$display("%h", REG_DATA_1);
+        #1;
+    
         RESET = 0;
 
-        repeat (3) begin
+        repeat (5) begin
 
             @(posedge CLK);
             #1;
 
-            $display("%h", OUT_INST);
+            //$display("%h", REG_DATA_1);
 
         end
         
@@ -51,7 +72,7 @@ module group_tb();
 
 
     initial begin
-        //$monitor("%t %h", $time, OUT_INST);
+        $monitor("%t %h %h %h %h", $time, dut.pc, dut.instruction, dut.rs1, REG_DATA_1);
     end
 
 
