@@ -14,14 +14,35 @@ module group
         input logic [ADDRESS_WIDTH-1:0] A3,
         input logic [DATA_WIDTH-1:0] WD3,
 
-        output logic [DATA_WIDTH-1:0] REG_DATA_1,
-        output logic [DATA_WIDTH-1:0] REG_DATA_2
-        
-        );
+        output logic [DATA_WIDTH-1:0] alu_result,
+        output logic zero
+    );
 
     logic [DATA_WIDTH-1:0] pcnext;
     logic [DATA_WIDTH-1:0] pc;
     logic [DATA_WIDTH-1:0] instruction;
+
+    logic [ADDRESS_WIDTH-1:0] rs1;
+    logic [ADDRESS_WIDTH-1:0] rs2;
+    logic [ADDRESS_WIDTH-1:0] dr;
+
+    logic [6:0] opcode;
+    logic [2:0] funct3;
+    logic [6:0] func7;
+
+    logic [DATA_WIDTH-1:0] REG_DATA_1;
+    logic [DATA_WIDTH-1:0] REG_DATA_2;
+
+    logic [2:0] imm_ctrl;
+    assign imm_ctrl = 3'b000;
+    
+    logic [DATA_WIDTH-1:0] imm_ext;
+    
+    
+    logic [2:0] alu_ctrl;
+    assign alu_ctrl = 3'b000;
+
+
 
     program_counter 
 
@@ -58,16 +79,9 @@ module group
             .RD(instruction)
         );
 
-    logic [ADDRESS_WIDTH-1:0] rs1;
-    logic [ADDRESS_WIDTH-1:0] rs2;
-    logic [ADDRESS_WIDTH-1:0] dr;
-
-    logic [6:0] opcode;
-    logic [2:0] funct3;
-    logic [6:0] func7;
-
-    decoder 
     
+    decoder 
+
         dec(
             .instruction(instruction),
 
@@ -81,27 +95,49 @@ module group
         );
 
     register_file
+        #(
+          .N(ADDRESS_WIDTH),
+          .M(DATA_WIDTH)
+        )
+        regFile(
+            
+            .CLK(CLK),
 
-    regFile(
-        
-        .CLK(CLK),
+            .WE3(WE3),
 
-        .WE3(WE3),
+            .A1(rs1),
 
-        .A1(rs1),
+            .RD1(REG_DATA_1),
 
-        .RD1(REG_DATA_1),
+            .A2(rs2),
+            .RD2(REG_DATA_2),
 
-        .A2(rs2),
-        .RD2(REG_DATA_2),
+            .A3(A3),
 
-        .A3(A3),
-
-        .WD3(WD3)
-        );
+            .WD3(WD3)
+            );
 
 
-    alu alu_();
+    sign_extender 
+    #(
+      .DATA_WIDTH(DATA_WIDTH)
+    )
+    se(
+      .instruction(instruction), 
+      .imm_ctrl(imm_ctrl),
+      .imm_ext(imm_ext)
+    );
+
+    alu 
+    
+    alu_
+    (
+      .srca(REG_DATA_1),
+      .srcb(imm_ext),
+      .alucontrol(alu_ctrl),
+      .aluresult(alu_result),
+      .zero(zero)
+    );
 
 endmodule
 

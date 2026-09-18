@@ -341,3 +341,39 @@ endmodule
             end
         end
     end
+
+
+
+    module sign_extender
+    #(
+        parameter DATA_WIDTH = 32
+    )
+    (
+        input  logic [31:0]            instruction, // The raw 32-bit instruction
+        input  logic [2:0]             ImmSrc,      // Control signal specifying the format
+        output logic [DATA_WIDTH-1:0]  imm_ext      // The sign-extended 32-bit immediate
+    );
+
+    always_comb begin
+        case (ImmSrc)
+            // I-type (e.g., addi, lw, jalr) -> 12-bit signed immediate
+            3'b000: imm_ext = { {20{instruction[31]}}, instruction[31:20] };
+
+            // S-type (e.g., sw, sb) -> 12-bit signed split immediate
+            3'b001: imm_ext = { {20{instruction[31]}}, instruction[31:25], instruction[11:7] };
+
+            // B-type (e.g., beq, bne) -> 13-bit signed conditional branch offset (LSB is always 0)
+            3'b010: imm_ext = { {19{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0 };
+
+            // U-type (e.g., lui, auipc) -> 20-bit upper immediate (lower 12 bits zeroed)
+            3'b011: imm_ext = { instruction[31:12], 12'b0 };
+
+            // J-type (e.g., jal) -> 21-bit signed unconditional jump offset (LSB is always 0)
+            3'b100: imm_ext = { {11{instruction[31]}}, instruction[31], instruction[19:12], instruction[20], instruction[30:21], 1'b0 };
+
+            // Default safe fallback (Output zero)
+            default: imm_ext = {DATA_WIDTH{1'b0}};
+        endcase
+    end
+
+endmodule
