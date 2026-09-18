@@ -128,8 +128,13 @@ module group
       .imm_ext(imm_ext)
     );
 
+    
     alu 
     
+    #(
+      .N(DATA_WIDTH)
+    )
+
     alu_
     (
       .srca(REG_DATA_1),

@@ -13,8 +13,8 @@ module group_tb();
     logic [ADDRESS_WIDTH-1:0] A3;
     logic [DATA_WIDTH-1:0] WD3;
 
-    logic [DATA_WIDTH-1:0] REG_DATA_1;
-    logic [DATA_WIDTH-1:0] REG_DATA_2;
+    logic [DATA_WIDTH-1:0] alu_result;
+    logic zero;
  
 
     group 
@@ -32,9 +32,8 @@ module group_tb();
             .WE3(WE3),
             .A3(A3),
             .WD3(WD3),
-
-            .REG_DATA_1(REG_DATA_1),
-            .REG_DATA_2(REG_DATA_2)
+            .alu_result(alu_result),
+            .zero(zero)
         );
 
     always begin
@@ -72,7 +71,7 @@ module group_tb();
 
 
     initial begin
-        $monitor("%t %h %h %h %h", $time, dut.pc, dut.instruction, dut.rs1, REG_DATA_1);
+        $monitor("%1t %h %h %d %d %d %b", $time, dut.pc, dut.instruction, dut.REG_DATA_1, $signed(dut.imm_ext), $signed(alu_result), zero);
     end
 
 
