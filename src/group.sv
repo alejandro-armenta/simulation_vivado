@@ -13,9 +13,11 @@ module group
         input logic WE3,
         input logic [ADDRESS_WIDTH-1:0] A3,
         input logic [DATA_WIDTH-1:0] WD3,
+        
+        input logic WE,
+        input logic [DATA_WIDTH-1:0] WD,
 
-        output logic [DATA_WIDTH-1:0] alu_result,
-        output logic zero
+        output logic [DATA_WIDTH-1:0] RD
     );
 
     logic [DATA_WIDTH-1:0] pcnext;
@@ -37,11 +39,13 @@ module group
     assign imm_ctrl = 3'b000;
     
     logic [DATA_WIDTH-1:0] imm_ext;
-    
+  
     
     logic [2:0] alu_ctrl;
     assign alu_ctrl = 3'b000;
 
+    logic [DATA_WIDTH-1:0] alu_result;
+    logic zero;
 
 
     program_counter 
@@ -142,6 +146,22 @@ module group
       .alucontrol(alu_ctrl),
       .aluresult(alu_result),
       .zero(zero)
+    );
+
+    
+
+    data_memory 
+    #(
+      .N(DATA_WIDTH),
+      .DEPTH(DEPTH)
+    )
+
+    dataMemory(
+      .CLK(CLK),
+      .WE(WE),
+      .A(alu_result),
+      .WD(WD),
+      .RD(RD)
     );
 
 endmodule
