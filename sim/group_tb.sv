@@ -4,18 +4,17 @@ module group_tb();
   
     parameter ADDRESS_WIDTH = 5;
     parameter DATA_WIDTH = 32;
-    parameter DEPTH = 32;
+    parameter DEPTH = 16;
 
     logic CLK;
     logic RESET;
 
     logic WE3;
-    logic [ADDRESS_WIDTH-1:0] A3;
-    logic [DATA_WIDTH-1:0] WD3;
+
+    logic [2:0] imm_ctrl;
+    logic [2:0] alu_ctrl;
 
     logic WE;
-    logic [DATA_WIDTH-1:0] WD;
-    logic [DATA_WIDTH-1:0] RD;
 
     group 
 
@@ -30,11 +29,12 @@ module group_tb();
             .RESET(RESET),
             
             .WE3(WE3),
-            .WE(WE),
 
-            .WD(WD),
-            .RD(RD)
+            .imm_ctrl(imm_ctrl),
 
+            .alu_ctrl(alu_ctrl),
+
+            .WE(WE)
         );
 
     always begin
@@ -45,36 +45,51 @@ module group_tb();
 
     initial begin 
 
-        #1;
+        @(posedge CLK);
 
         RESET = 1;
         WE3 = 0;
-        WE = 0;
-        WD = 0;
 
-        dut.regFile.dump_memory();
 
-        #1;
+        @(negedge CLK);
         
         RESET = 0;
+        
         WE3 = 1;
+
+        WE = 0;
+
+        // type load
+        imm_ctrl = 3'b000;
+        
+        // suma
+        alu_ctrl = 3'b000;
+        
         
         @(posedge CLK);
         #1;
 
-        dut.regFile.dump_memory();
+        dut.dataMemory.dump_memory();
+
         
         @(negedge CLK);
+        
+        // dont write to register file
         WE3 = 0;
+
+        // write to memory
         WE = 1;
 
+        // type store
+        imm_ctrl = 3'b001;
+        
+        // suma
+        alu_ctrl = 3'b000;
+        
         @(posedge CLK);
         #1;
 
-        //en 0000C tienes que ver 10  data memory;
-        //$display data memory and look for 10
-        //$display()
-    
+        dut.dataMemory.dump_memory();
         
         $finish;
     end
