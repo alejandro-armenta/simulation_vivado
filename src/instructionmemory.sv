@@ -28,7 +28,7 @@ always_comb begin
 end
 
 initial begin
-    $readmemh("a.hex", memarray);
+    $readmemh("../a.hex", memarray);
 end
 
 task automatic dump_memory();

@@ -6,11 +6,11 @@ set SNAPSHOT_NAME "snapshot"
 
 set OUTPUT_DIR "./build"  
 
-#if {[file exists $OUTPUT_DIR]} {
-#    file delete -force $OUTPUT_DIR
-#}
+if {[file exists $OUTPUT_DIR]} {
+    file delete -force $OUTPUT_DIR
+}
 
-#file mkdir $OUTPUT_DIR
+file mkdir $OUTPUT_DIR
 
 cd $OUTPUT_DIR
 
