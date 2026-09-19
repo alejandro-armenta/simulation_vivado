@@ -4,7 +4,7 @@ module group_tb();
   
     parameter ADDRESS_WIDTH = 5;
     parameter DATA_WIDTH = 32;
-    parameter DEPTH = 64;
+    parameter DEPTH = 32;
 
     logic CLK;
     logic RESET;
@@ -64,11 +64,17 @@ module group_tb();
 
         dut.regFile.dump_memory();
         
-        repeat (5) begin
-          
-          @(posedge CLK);
+        @(negedge CLK);
+        WE3 = 0;
+        WE = 1;
 
-        end
+        @(posedge CLK);
+        #1;
+
+        //en 0000C tienes que ver 10  data memory;
+        //$display data memory and look for 10
+        //$display()
+    
         
         $finish;
     end

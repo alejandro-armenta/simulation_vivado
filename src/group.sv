@@ -11,12 +11,11 @@ module group
         input logic RESET,
 
         input logic WE3,
-        
-        input logic WE,
 
-        input logic [DATA_WIDTH-1:0] WD,
+        input logic [2:0] imm_ctrl,
+        input logic [2:0] alu_ctrl,
 
-        output logic [DATA_WIDTH-1:0] RD
+        input logic WE
     );
 
     logic [DATA_WIDTH-1:0] pcnext;
@@ -33,18 +32,13 @@ module group
 
     logic [DATA_WIDTH-1:0] REG_DATA_1;
     logic [DATA_WIDTH-1:0] REG_DATA_2;
-
-    logic [2:0] imm_ctrl;
-    assign imm_ctrl = 3'b000;
     
     logic [DATA_WIDTH-1:0] imm_ext;
-  
-    
-    logic [2:0] alu_ctrl;
-    assign alu_ctrl = 3'b000;
 
     logic [DATA_WIDTH-1:0] alu_result;
     logic zero;
+
+    logic [DATA_WIDTH-1:0] RD;
 
     program_counter 
 
@@ -77,7 +71,6 @@ module group
 
         mem(
             .A(pc),
-
             .RD(instruction)
         );
 
@@ -156,9 +149,11 @@ module group
 
     dataMemory(
       .CLK(CLK),
+      
       .WE(WE),
       .A(alu_result),
-      .WD(WD),
+      .WD(REG_DATA_2),
+      
       .RD(RD)
     );
 

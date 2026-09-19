@@ -229,3 +229,152 @@ module tb_group();
     end
 
 endmodule
+
+
+module sign_extender
+  #(
+    parameter DATA_WIDTH = 32
+  )
+  (
+    input  logic [DATA_WIDTH - 1 : 0] instruction,
+    input  logic [2:0]                imm_ctrl,
+    output logic [DATA_WIDTH - 1 : 0] imm_ext
+  );
+
+  always_comb begin
+    case (imm_ctrl)
+      // 3'b000: I-type (e.g., addi, lw)
+      3'b000: begin
+        imm_ext = { {20{instruction[31]}}, instruction[31:20] };
+      end
+
+      // 3'b001: S-type (e.g., sw, sb) -> 12-bit split immediate
+      3'b001: begin
+        imm_ext = { {20{instruction[31]}}, instruction[31:25], instruction[11:7] };
+      end
+
+      // Default safe fallback -> outputs 32 bits of 0
+      default: begin 
+        imm_ext = {DATA_WIDTH{1'b0}};
+      end
+    endcase
+  end
+
+endmodule
+
+
+`timescale 1ns/1ps
+
+module tb_group();
+
+    // 1. Parameters matching your design
+    localparam ADDRESS_WIDTH = 5;
+    localparam DATA_WIDTH    = 32;
+    localparam DEPTH         = 64;
+    localparam CLK_PERIOD    = 10;
+
+    // 2. Testbench driven control signals
+    logic       CLK;
+    logic       RESET;
+    logic       WE3;
+    logic [2:0] imm_ctrl;
+    logic [2:0] alu_ctrl;
+    logic       WE;
+
+    // 3. Instantiate the Device Under Test (DUT)
+    group #(
+        .ADDRESS_WIDTH(ADDRESS_WIDTH),
+        .DATA_WIDTH(DATA_WIDTH),
+        .DEPTH(DEPTH)
+    ) dut (
+        .CLK(CLK),
+        .RESET(RESET),
+        .WE3(WE3),
+        .imm_ctrl(imm_ctrl),
+        .alu_ctrl(alu_ctrl),
+        .WE(WE)
+    );
+
+    // 4. Clock Generation
+    initial begin
+        CLK = 0;
+        forever #(CLK_PERIOD/2) CLK = ~CLK;
+    end
+
+    // 5. Stimulus Block
+    initial begin
+        // Initialize control signals to safe baseline defaults
+        RESET    = 1;
+        WE3      = 0;
+        imm_ctrl = 3'b000; // Default I-type
+        alu_ctrl = 3'b000; // Default ADD
+        WE       = 0;
+
+        // Print initial memory state at startup
+        #1;
+        $display("========================================");
+        $display("--- INITIAL INSTRUCTION MEMORY DUMP ----");
+        $display("========================================");
+        dut.mem.dump_memory(); 
+        $display("========================================\n");
+
+        // Release reset to start stepping through a.hex instructions
+        #(CLK_PERIOD * 2);
+        @(negedge CLK);
+        RESET = 0;
+        $display("[TB INFO] Reset released. Beginning Execution.\n");
+
+        // --- CYCLE 1: Simulating an I-type Instruction (e.g., addi) ---
+        @(negedge CLK);
+        WE3      = 1;      // Enable register file writeback
+        imm_ctrl = 3'b000; // Sign extender set to I-type
+        alu_ctrl = 3'b000; // ALU operation set to ADD
+        WE       = 0;      // Disable data memory write
+
+        // --- CYCLE 2: Simulating an S-type Store Instruction (e.g., sw) ---
+        @(negedge CLK);
+        WE3      = 0;      // Disable register file writeback (Stores don't write to registers)
+        imm_ctrl = 3'b001; // Sign extender set to your new S-type split layout!
+        alu_ctrl = 3'b000; // ALU computes: Base Register (rs1) + S-Immediate offset
+        WE       = 1;      // Enable data memory write (latches REG_DATA_2 into RAM)
+
+        // --- CYCLE 3: Clear controls back to safe state ---
+        @(negedge CLK);
+        WE       = 0;
+        WE3      = 1;
+        imm_ctrl = 3'b000;
+
+        // Let it cycle through remaining instructions
+        repeat (5) @(posedge CLK);
+
+        $display("\n[TB INFO] Simulation finished.");
+        $finish;
+    end
+
+    // 6. Complete Datapath Runtime Log
+    initial begin
+        $display("\n%-10s | %-8s | %-8s | %-3s | %-8s | %-8s | %-8s | %-2s | %-8s", 
+                 "Time", "PC", "Inst", "Imm", "SrcA (r1)", "SrcB (imm)", "ALU Res", "WE", "RAM In(r2)");
+        $display("-----------------------------------------------------------------------------------------------------");
+        
+        forever begin
+            @(posedge CLK);
+            #(CLK_PERIOD / 10); // Settle delay for combinational signals
+            
+            if (!RESET) begin
+                $display("%-10t | %-8h | %-8h | 3'b%03b | %-8h | %-8h | %-8h | %-2b | %-8h", 
+                         $time, 
+                         dut.pc, 
+                         dut.instruction, 
+                         imm_ctrl,
+                         dut.REG_DATA_1,
+                         dut.imm_ext,
+                         dut.alu_result,
+                         WE,
+                         dut.REG_DATA_2 // This is the data now being sent directly to data memory input WD
+                );
+            end
+        end
+    end
+
+endmodule

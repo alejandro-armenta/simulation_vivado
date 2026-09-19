@@ -1,0 +1,1 @@
+vivado -mode batch -source elaborate.tcl -notrace -log /dev/null -journal /dev/null

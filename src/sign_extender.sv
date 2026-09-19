@@ -30,7 +30,27 @@ module sign_extender
           instruction[31:20]
         };
 
-    end
+      end
+
+      3'b001: begin 
+
+        imm_ext = 
+        {
+          {
+            20
+
+            { 
+              instruction[31] 
+            }
+
+          }, 
+          
+          instruction[31:25],
+
+          instruction[11:7]
+        };
+
+      end
 
       default: begin 
       
