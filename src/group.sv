@@ -9,12 +9,11 @@ module group
     (
         input logic CLK,
         input logic RESET,
-        
+
         input logic WE3,
-        input logic [ADDRESS_WIDTH-1:0] A3,
-        input logic [DATA_WIDTH-1:0] WD3,
         
         input logic WE,
+
         input logic [DATA_WIDTH-1:0] WD,
 
         output logic [DATA_WIDTH-1:0] RD
@@ -46,7 +45,6 @@ module group
 
     logic [DATA_WIDTH-1:0] alu_result;
     logic zero;
-
 
     program_counter 
 
@@ -116,9 +114,9 @@ module group
             .A2(rs2),
             .RD2(REG_DATA_2),
 
-            .A3(A3),
+            .A3(dr),
 
-            .WD3(WD3)
+            .WD3(RD)
             );
 
 

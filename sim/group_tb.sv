@@ -30,11 +30,9 @@ module group_tb();
             .RESET(RESET),
             
             .WE3(WE3),
-            .A3(A3),
-            .WD3(WD3),
             .WE(WE),
-            .WD(WD),
 
+            .WD(WD),
             .RD(RD)
 
         );
@@ -50,24 +48,25 @@ module group_tb();
         #1;
 
         RESET = 1;
-
         WE3 = 0;
-        A3 = 0;
-        WD3 = 0;
         WE = 0;
         WD = 0;
 
-        //$display("%h", REG_DATA_1);
+        dut.regFile.dump_memory();
+
         #1;
-    
+        
         RESET = 0;
+        WE3 = 1;
+        
+        @(posedge CLK);
+        #1;
 
+        dut.regFile.dump_memory();
+        
         repeat (5) begin
-
-            @(posedge CLK);
-            #1;
-
-            //$display("%h", REG_DATA_1);
+          
+          @(posedge CLK);
 
         end
         
@@ -76,14 +75,16 @@ module group_tb();
 
 
     initial begin
+        /*
         $monitor(
           "%1t %h %h %h", 
           $time, 
           dut.pc, 
           dut.instruction, 
           RD
-        );
-    end
+          );
+          */
+        end
 
 
 
