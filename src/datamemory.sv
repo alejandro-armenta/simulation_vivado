@@ -15,7 +15,6 @@ logic [N-1:0] memarray[DEPTH-1:0];
 logic [N-1:0] word_addr;
 
 
-
 always_ff @(posedge CLK) begin
     if (WE) begin
         if (word_addr < DEPTH) begin
