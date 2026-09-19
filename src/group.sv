@@ -2,43 +2,63 @@ module group
 
     #(
         parameter ADDRESS_WIDTH = 5,
+
         parameter DATA_WIDTH = 32,
+        
         parameter DEPTH = 64
     )
 
     (
         input logic CLK,
+
         input logic RESET,
 
         input logic WE3,
 
         input logic [2:0] imm_ctrl,
-        input logic [2:0] alu_ctrl,
 
-        input logic WE
+        input logic alu_src,
+        
+        input logic [2:0] alu_ctrl,
+        
+        input logic WE,
+
+        input logic result_src
     );
 
     logic [DATA_WIDTH-1:0] pcnext;
+
     logic [DATA_WIDTH-1:0] pc;
+    
     logic [DATA_WIDTH-1:0] instruction;
 
     logic [ADDRESS_WIDTH-1:0] rs1;
+    
     logic [ADDRESS_WIDTH-1:0] rs2;
-    logic [ADDRESS_WIDTH-1:0] dr;
+    
+    logic [ADDRESS_WIDTH-1:0] destR;
 
     logic [6:0] opcode;
+    
     logic [2:0] funct3;
+    
     logic [6:0] func7;
 
-    logic [DATA_WIDTH-1:0] REG_DATA_1;
+    logic [DATA_WIDTH-1:0] srcA;
+    
     logic [DATA_WIDTH-1:0] REG_DATA_2;
     
     logic [DATA_WIDTH-1:0] imm_ext;
-
+    
+    logic [DATA_WIDTH-1:0] srcB;
+    
     logic [DATA_WIDTH-1:0] alu_result;
+    
     logic zero;
-
+    
     logic [DATA_WIDTH-1:0] RD;
+    
+    logic [DATA_WIDTH-1:0] result;
 
     program_counter 
 
@@ -82,7 +102,7 @@ module group
 
             .rs1(rs1),
             .rs2(rs2),
-            .dr(dr),
+            .dr(destR),
 
             .opcode(opcode),
             .funct3(funct3),
@@ -102,14 +122,14 @@ module group
 
             .A1(rs1),
 
-            .RD1(REG_DATA_1),
+            .RD1(srcA),
 
             .A2(rs2),
             .RD2(REG_DATA_2),
 
-            .A3(dr),
+            .A3(destR),
 
-            .WD3(RD)
+            .WD3(result)
             );
 
 
@@ -123,6 +143,15 @@ module group
       .imm_ext(imm_ext)
     );
 
+
+
+    mux2_n mux1(
+      .a(REG_DATA_2),
+      .b(imm_ext),
+      .sel(alu_src),
+
+      .out(srcB)
+    );
     
     alu 
     
@@ -132,8 +161,8 @@ module group
 
     alu_
     (
-      .srca(REG_DATA_1),
-      .srcb(imm_ext),
+      .srca(srcA),
+      .srcb(srcB),
       .alucontrol(alu_ctrl),
       .aluresult(alu_result),
       .zero(zero)
@@ -155,6 +184,16 @@ module group
       .WD(REG_DATA_2),
       
       .RD(RD)
+    );
+
+
+    mux2_n mux2(
+      .a(alu_result),
+      .b(RD),
+
+      .sel(result_src),
+
+      .out(result)
     );
 
 endmodule
