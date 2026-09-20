@@ -378,3 +378,125 @@ module tb_group();
     end
 
 endmodule
+
+
+
+module control_unit (
+    input  logic [6:0] opcode,
+    input  logic [2:0] funct3,
+    input  logic [6:0] func7,
+    input  logic       zero,        // Zero flag from ALU
+
+    output logic       pc_source,   // Selects PC+4 vs PCTarget
+    output logic       WE3,         // Register File Write Enable
+    output logic [2:0] imm_ctrl,    // Sign Extender control
+    output logic       alu_src,     // Selects Register data vs Immediate
+    output logic [2:0] alu_ctrl,    // ALU Operation control
+    output logic       WE,          // Data Memory Write Enable
+    output logic       result_src   // Selects ALU result vs Data Memory read
+);
+
+    logic branch;
+    logic [1:0] alu_op;
+
+    // =========================================================================
+    // 1. MAIN DECODER (Combinational Control Matrix)
+    // =========================================================================
+    always_comb begin
+        // Default safe values
+        WE3        = 1'b0;
+        imm_ctrl   = 3'b000;
+        alu_src    = 1'b0;
+        WE         = 1'b0;
+        result_src = 1'b0;
+        branch     = 1'b0;
+        alu_op     = 2'b00;
+
+        case (opcode)
+            // R-type (e.g., add, sub, or, and)
+            7'b0110011: begin
+                WE3    = 1'b1; // Write to RegFile
+                alu_op = 2'b10; // Look at funct3/func7
+            end
+
+            // I-type ALU (e.g., addi, andi)
+            7'b0010011: begin
+                WE3      = 1'b1;
+                alu_src  = 1'b1; // Choose immediate
+                imm_ctrl = 3'b000; // I-type sign extension
+                alu_op   = 2'b11; // Look at funct3
+            end
+
+            // Load Word (lw)
+            7'b0000011: begin
+                WE3        = 1'b1;
+                alu_src    = 1'b1; // Choose immediate
+                imm_ctrl   = 3'b000; // I-type sign extension
+                result_src = 1'b1; // Route data memory output to register
+                alu_op     = 2'b00; // Force addition for address offset
+            end
+
+            // Store Word (sw)
+            7'b0100011: begin
+                alu_src    = 1'b1; // Choose immediate
+                imm_ctrl   = 3'b001; // S-type sign extension
+                WE         = 1'b1; // Write to Data Memory
+                alu_op     = 2'b00; // Force addition for address offset
+            end
+
+            // Branch Equal (beq)
+            7'b1100011: begin
+                imm_ctrl   = 3'b010; // B-type sign extension
+                branch     = 1'b1; // Attempt to branch
+                alu_op     = 2'b01; // Force subtraction to check equality
+            end
+
+            default: begin
+                // Maintain defaults safely
+            end
+        endcase
+    end
+
+    // =========================================================================
+    // 2. ALU DECODER
+    // =========================================================================
+    always_comb begin
+        case (alu_op)
+            2'b00: alu_ctrl = 3'b000; // Force Add (for lw/sw address calculation)
+            2'b01: alu_ctrl = 3'b001; // Force Subtract (for beq comparison)
+            
+            // R-type execution decoding
+            2'b10: begin
+                case (funct3)
+                    3'b000: begin
+                        // Differentiate between add and sub based on func7 bit 5
+                        if (func7[5]) alu_ctrl = 3'b001; // sub
+                        else          alu_ctrl = 3'b000; // add
+                    end
+                    3'b110: alu_ctrl = 3'b011; // or
+                    3'b111: alu_ctrl = 3'b010; // and
+                    default: alu_ctrl = 3'b000;
+                endcase
+            end
+
+            // I-type execution decoding
+            2'b11: begin
+                case (funct3)
+                    3'b000:  alu_ctrl = 3'b000; // addi
+                    3'b110:  alu_ctrl = 3'b011; // ori
+                    3'b111:  alu_ctrl = 3'b010; // andi
+                    default: alu_ctrl = 3'b000;
+                endcase
+            end
+
+            default: alu_ctrl = 3'b000;
+        endcase
+    end
+
+    // =========================================================================
+    // 3. BRANCH LOGIC MATRIX
+    // =========================================================================
+    // If it's a branch instruction AND the ALU subtraction result equals zero (numbers match), branch!
+    assign pc_source = branch & zero;
+
+endmodule
