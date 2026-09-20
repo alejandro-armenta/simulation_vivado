@@ -419,14 +419,6 @@ module control_unit (
                 alu_op = 2'b10; // Look at funct3/func7
             end
 
-            // I-type ALU (e.g., addi, andi)
-            7'b0010011: begin
-                WE3      = 1'b1;
-                alu_src  = 1'b1; // Choose immediate
-                imm_ctrl = 3'b000; // I-type sign extension
-                alu_op   = 2'b11; // Look at funct3
-            end
-
             // Load Word (lw)
             7'b0000011: begin
                 WE3        = 1'b1;

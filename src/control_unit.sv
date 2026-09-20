@@ -44,52 +44,63 @@ module control_unit
 
       end 
 
-      7'b0110011:begin 
+      // load word
+      7'b0000011:begin 
         
         WE3 = 1;
-        imm_ctrl = 3'bxxx;
-        alu_src = 0;
+        imm_ctrl = 3'b000;
+        alu_src = 1;
         WE = 0;
-        result_src = 0;
+        result_src = 1;
 
         branch = 0;
-        aluop = 2'b10;
+        aluop = 2'b00;
 
       end 
 
-      7'b0110011:begin 
+      // store word
+      7'b0100011:begin 
         
-        WE3 = 1;
-        imm_ctrl = 3'bxxx;
-        alu_src = 0;
-        WE = 0;
-        result_src = 0;
+        WE3 = 0;
+        imm_ctrl = 3'b001;
+        alu_src = 1;
+        WE = 1;
+        result_src = 1'b0;
 
         branch = 0;
-        aluop = 2'b10;
+        aluop = 2'b00;
+
+      end 
+
+      // beq
+      7'b1100011:begin 
+        
+        WE3 = 0;
+        imm_ctrl = 3'b010;
+        alu_src = 0;
+        WE = 0;
+        result_src = 1'b0;
+
+        branch = 1;
+        aluop = 2'b01;
 
       end 
 
 
-      7'b0110011:begin 
-        
-        WE3 = 1;
-        imm_ctrl = 3'bxxx;
-        alu_src = 0;
-        WE = 0;
-        result_src = 0;
-
-        branch = 0;
-        aluop = 2'b10;
-
-      end 
       default: begin
-          // Maintain defaults safely
+
+        WE3 = 0;
+        imm_ctrl = 3'bxxx;
+        alu_src = 0;
+        WE = 0;
+        result_src = 0;
+
+        branch = 0;
+        aluop = 2'b00;
+
       end
     
     endcase
-    // aluop = 2'b00;
-    // branch = 0;
 
   end
 
@@ -103,7 +114,7 @@ module control_unit
       2'b10: begin
         
         case (func3)
-          // alu_ctrl = 3'b000;
+          
           3'b000: begin
             
             logic [1:0] a = {opcode[5],func7[5]};

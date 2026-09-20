@@ -9,24 +9,24 @@ module group
     )
 
     (
-        input logic pc_source,
-
         input logic CLK,
-
-        input logic RESET,
-
-        input logic WE3,
-
-        input logic [2:0] imm_ctrl,
-
-        input logic alu_src,
-        
-        input logic [2:0] alu_ctrl,
-        
-        input logic WE,
-
-        input logic result_src
+        input logic RESET
     );
+
+    // control signals
+    logic pc_source;
+
+    logic WE3;
+
+    logic [2:0] imm_ctrl;
+
+    logic alu_src;
+
+    logic WE;
+
+    logic result_src;
+
+    logic [2:0] alu_ctrl;
 
     logic [DATA_WIDTH-1:0] pcnext;
     
@@ -141,6 +141,25 @@ module group
         .opcode(opcode),
         .funct3(funct3),
         .func7(func7)
+    );
+
+
+    control_unit 
+
+    control_unit_
+    (
+      .opcode(opcode),
+      .func3(funct3),
+      .func7(func7),
+      .zero(zero),
+
+      .pc_source(pc_source),
+      .WE3(WE3),
+      .imm_ctrl(imm_ctrl),
+      .alu_src(alu_src),
+      .WE(WE),
+      .result_src(result_src),
+      .alu_ctrl(alu_ctrl)    
     );
 
     register_file
