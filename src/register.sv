@@ -1,6 +1,8 @@
 
-module program_counter
-#(parameter N = 32)
+
+module register
+
+  #(parameter N = 32)
 (
     input logic CLK,
     input logic RESET,

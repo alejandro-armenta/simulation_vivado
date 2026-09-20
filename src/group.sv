@@ -9,6 +9,8 @@ module group
     )
 
     (
+        input logic pc_source,
+
         input logic CLK,
 
         input logic RESET,
@@ -27,6 +29,8 @@ module group
     );
 
     logic [DATA_WIDTH-1:0] pcnext;
+    
+    logic [DATA_WIDTH-1:0] pcplus4;
 
     logic [DATA_WIDTH-1:0] pc;
     
@@ -51,6 +55,8 @@ module group
     logic [DATA_WIDTH-1:0] imm_ext;
     
     logic [DATA_WIDTH-1:0] srcB;
+
+    logic [DATA_WIDTH-1:0] pc_target;
     
     logic [DATA_WIDTH-1:0] alu_result;
     
@@ -60,92 +66,131 @@ module group
     
     logic [DATA_WIDTH-1:0] result;
 
-    program_counter 
+    mux2_n 
+    
+    #(.N(DATA_WIDTH))
+    
+    mux0(
+      
+      .a(pcplus4),
 
-        #(.N(DATA_WIDTH)) 
+      .b(pc_target),
 
-        register(
-            .CLK(CLK), 
-            .RESET(RESET),       
-            .PCNext(pcnext),
+      .sel(pc_source),
 
-            .PC(pc)
-            );
+      .out(pcnext)
+    );
+    
+
+    register 
+
+    #(.N(DATA_WIDTH)) 
+
+    register_
+    (
+      .CLK(CLK), 
+      
+      .RESET(RESET),  
+
+      .PCNext(pcnext),
+
+      .PC(pc)
+    );
+
+
 
     adder_4 
 
-        #(.N(DATA_WIDTH)) 
+    #(.N(DATA_WIDTH)) 
 
-        adder(
-            .PC(pc),
-            
-            .PCPlus4(pcnext)
-        );
+    adder_4_
+    
+    (
+
+        .PC(pc),
+        
+        .PCPlus4(pcplus4)
+
+    );
 
     instruction_memory 
 
-        #(
-            .N(DATA_WIDTH),
-            .DEPTH(DEPTH)
-        )
+    #(
+        .N(DATA_WIDTH),
+        .DEPTH(DEPTH)
+    )
 
-        mem(
-            .A(pc),
-            .RD(instruction)
-        );
+    instruction_memory_
+    (
+        .A(pc),
+        .RD(instruction)
+    );
 
     
     decoder 
 
-        dec(
-            .instruction(instruction),
+    decoder_
+    
+    (
+        .instruction(instruction),
 
-            .rs1(rs1),
-            .rs2(rs2),
-            .dr(destR),
+        .rs1(rs1),
+        .rs2(rs2),
+        .dr(destR),
 
-            .opcode(opcode),
-            .funct3(funct3),
-            .func7(func7)
-        );
+        .opcode(opcode),
+        .funct3(funct3),
+        .func7(func7)
+    );
 
     register_file
-        #(
-          .N(ADDRESS_WIDTH),
-          .M(DATA_WIDTH)
-        )
-        regFile(
-            
-            .CLK(CLK),
 
-            .WE3(WE3),
+    #(
+      .N(ADDRESS_WIDTH),
+      .M(DATA_WIDTH)
+    )
+    
+    register_file_
+    
+    (
+        
+        .CLK(CLK),
 
-            .A1(rs1),
+        .WE3(WE3),
 
-            .RD1(srcA),
+        .A1(rs1),
 
-            .A2(rs2),
-            .RD2(REG_DATA_2),
+        .RD1(srcA),
 
-            .A3(destR),
+        .A2(rs2),
+        .RD2(REG_DATA_2),
 
-            .WD3(result)
-            );
+        .A3(destR),
+
+        .WD3(result)
+        );
 
 
     sign_extender 
+    
     #(
       .DATA_WIDTH(DATA_WIDTH)
     )
-    se(
+    
+    sign_extender_
+    
+    (
       .instruction(instruction), 
       .imm_ctrl(imm_ctrl),
       .imm_ext(imm_ext)
     );
 
 
-
-    mux2_n mux1(
+    mux2_n 
+    
+    #(.N(DATA_WIDTH))
+    
+    mux1(
       .a(REG_DATA_2),
       .b(imm_ext),
       .sel(alu_src),
@@ -153,6 +198,19 @@ module group
       .out(srcB)
     );
     
+
+    adder 
+    
+    #(.N(DATA_WIDTH))
+    
+    adder_
+    (
+      .a(pc),
+      .b(imm_ext),
+      .out(pc_target)
+      );
+
+
     alu 
     
     #(
@@ -171,12 +229,15 @@ module group
     
 
     data_memory 
+
     #(
       .N(DATA_WIDTH),
       .DEPTH(DEPTH)
     )
 
-    dataMemory(
+    data_memory_
+    
+    (
       .CLK(CLK),
       
       .WE(WE),
@@ -187,7 +248,11 @@ module group
     );
 
 
-    mux2_n mux2(
+    mux2_n 
+
+    #(.N(DATA_WIDTH))
+    
+    mux2(
       .a(alu_result),
       .b(RD),
 

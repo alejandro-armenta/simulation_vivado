@@ -8,6 +8,8 @@ module group_tb();
     
     parameter DEPTH = 16;
 
+    logic pc_source;
+
     logic CLK;
 
     logic RESET;
@@ -35,6 +37,8 @@ module group_tb();
         )
 
         dut(
+            .pc_source(pc_source),
+
             .CLK(CLK), 
             
             .RESET(RESET),
@@ -73,6 +77,8 @@ module group_tb();
         
         RESET = 0;
         
+        pc_source = 0;
+
         WE3 = 1;
 
         WE = 0;
@@ -95,6 +101,8 @@ module group_tb();
         
         @(negedge CLK);
         
+        pc_source = 0;
+
         // dont write to register file
         WE3 = 0;
 
@@ -117,6 +125,8 @@ module group_tb();
         // ALU
         @(negedge CLK);
         
+        pc_source = 0;
+
         // write to register file
         WE3 = 1;
 
@@ -135,23 +145,50 @@ module group_tb();
 
         @(posedge CLK);
         #1;
+
+
+        @(negedge CLK);
         
-        dut.regFile.dump_memory();
+        pc_source = 1;
+
+        WE3 = 0;
+        
+        imm_ctrl = 3'b010;
+        
+        alu_src = 0;
+        
+        alu_ctrl = 3'b001;
+        
+        WE = 0;
+
+        result_src = 0;
+
+
+        @(posedge CLK);
+        #1;
+        
+        @(negedge CLK);
+        
+        pc_source = 0;
+
+        //repeat (5) begin
+        //   
+        //end 
+        
+        // dut.regFile.dump_memory();
         
         $finish;
     end
 
 
     initial begin
-        /*
+      
         $monitor(
-          "%1t %h %h %h", 
+          "%1t %h %h", 
           $time, 
           dut.pc, 
-          dut.instruction, 
-          RD
+          dut.instruction
           );
-          */
         end
 
 
