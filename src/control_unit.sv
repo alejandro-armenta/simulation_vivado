@@ -14,7 +14,7 @@ module control_unit
     output logic [2:0]  imm_ctrl,
     output logic        alu_src,
     output logic        WE,
-    output logic        result_src,
+    output logic [1:0]  result_src,
 
     // alu controler
     output logic [2:0]  alu_ctrl
@@ -23,6 +23,8 @@ module control_unit
 
   logic [1:0] aluop;
   logic branch;
+  logic jump;
+  
 
 
   always_comb begin 
@@ -30,73 +32,53 @@ module control_unit
 
     case (opcode)
 
-      // r type
-      7'b0110011:begin 
-        
-        WE3 = 1;
-        imm_ctrl = 3'bxxx;
-        alu_src = 0;
-        WE = 0;
-        result_src = 0;
-
-        branch = 0;
-        aluop = 2'b10;
-
-      end 
-
       // load word
       7'b0000011:begin 
         
-        WE3 = 1;
-        imm_ctrl = 3'b000;
-        alu_src = 1;
-        WE = 0;
-        result_src = 1;
-
-        branch = 0;
-        aluop = 2'b00;
+        WE3 = 1;imm_ctrl = 3'b000;alu_src = 1;WE = 0;result_src = 2'b01;branch = 0;aluop = 2'b00;jump = 0;
 
       end 
 
       // store word
       7'b0100011:begin 
         
-        WE3 = 0;
-        imm_ctrl = 3'b001;
-        alu_src = 1;
-        WE = 1;
-        result_src = 1'b0;
-
-        branch = 0;
-        aluop = 2'b00;
+        WE3 = 0;imm_ctrl = 3'b001;alu_src = 1;WE = 1;result_src = 2'bxx;branch = 0;aluop = 2'b00;jump = 0;
 
       end 
+
+      // r type
+      7'b0110011:begin 
+        
+        WE3 = 1;imm_ctrl = 3'bxxx;alu_src = 0;WE = 0;result_src = 2'b00;branch = 0;aluop = 2'b10;jump = 0;
+
+      end
+
 
       // beq
       7'b1100011:begin 
         
-        WE3 = 0;
-        imm_ctrl = 3'b010;
-        alu_src = 0;
-        WE = 0;
-        result_src = 1'b0;
-
-        branch = 1;
-        aluop = 2'b01;
+        WE3 = 0;imm_ctrl = 3'b010;alu_src = 0;WE = 0;result_src = 2'bxx;branch = 1;aluop = 2'b01;jump = 0;
 
       end 
 
+      // adi   
+      7'b0010011:begin 
+        
+        WE3 = 1;imm_ctrl = 3'b000;alu_src = 1;WE = 0;result_src = 2'b00;branch = 0;aluop = 2'b10;jump = 0;
+
+      end
+
+
+      // jal
+      7'b1101111:begin 
+        
+        WE3 = 1;imm_ctrl = 3'b011;alu_src = 0;WE = 0;result_src = 2'b10;branch = 0;aluop = 2'bxx;jump = 1;
+
+      end 
 
       default: begin
 
-        WE3 = 0;
-        imm_ctrl = 3'bxxx;
-        alu_src = 0;
-        WE = 0;
-        result_src = 0;
-
-        branch = 0;
-        aluop = 2'b00;
+        WE3 = 0;imm_ctrl = 3'bxxx;alu_src = 0;WE = 0;result_src = 2'bxx;branch = 0;aluop = 2'bxx;jump = 0;
 
       end
     
@@ -149,7 +131,7 @@ module control_unit
 
 
   always_comb begin
-    pc_source = branch & zero;
+    pc_source =  jump | (branch & zero);
   end
 
 endmodule

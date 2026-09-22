@@ -51,7 +51,7 @@ endtask
 
 initial begin
 
-    memarray[0] = 32'd10;
+    // memarray[0] = 32'd10;
 
 end
 

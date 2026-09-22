@@ -44,8 +44,8 @@ initial begin
         memarray[i] = {M{1'b0}};
     end
 
-    memarray[9] = 32'h4;
-    memarray[5] = 32'h6;
+    // memarray[9] = 32'h4;
+    // memarray[5] = 32'h6;
 end
 
 task automatic dump_memory();

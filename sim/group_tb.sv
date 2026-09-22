@@ -46,7 +46,40 @@ module group_tb();
         
         RESET = 0;
         
-        repeat (20) @(posedge CLK);
+        // addi 10
+        @(posedge CLK);
+        #1;
+
+        // addi -10
+        @(posedge CLK);
+        #1;
+
+        @(posedge CLK);
+        #1;
+
+        @(posedge CLK);
+        #1;
+
+        // sw 20 en el 8
+        @(posedge CLK);
+        #1;
+
+        @(posedge CLK);
+        #1;
+
+        
+        // se salta una instruction 
+        @(posedge CLK);
+        #1;
+        
+        @(posedge CLK);
+        #1;
+        
+        
+        dut.register_file_.dump_memory();
+
+
+        // dut.data_memory_.dump_memory();
 
         $finish;
         
@@ -55,12 +88,13 @@ module group_tb();
 
     initial begin
       
-        $monitor(
-          "%1t %h %h", 
-          $time, 
-          dut.pc, 
-          dut.instruction
-          );
-        end
+        // $monitor(
+        //   "%1t %h %h", 
+        //   $time, 
+        //   dut.pc, 
+        //   dut.instruction
+        //   );
+        
+    end
 
 endmodule

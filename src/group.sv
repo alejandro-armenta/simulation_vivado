@@ -24,7 +24,7 @@ module group
 
     logic WE;
 
-    logic result_src;
+    logic [1:0] result_src;
 
     logic [2:0] alu_ctrl;
 
@@ -267,13 +267,17 @@ module group
     );
 
 
-    mux2_n 
+    mux4_n 
 
     #(.N(DATA_WIDTH))
     
-    mux2(
+    mux4_n_
+    
+    (
       .a(alu_result),
       .b(RD),
+      .c(pcplus4),
+      .d('0),
 
       .sel(result_src),
 
