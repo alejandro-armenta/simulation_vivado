@@ -6,6 +6,7 @@ set SNAPSHOT_NAME "snapshot"
 
 set OUTPUT_DIR "./build"  
 
+# Target UVM Test Name variable
 set UVM_TEST [if {[info exists ::env(UVM_TESTNAME)]} {set ::env(UVM_TESTNAME)} {format "my_first_uvm_test"}]
 
 if {[file exists $OUTPUT_DIR]} {
@@ -34,6 +35,7 @@ proc compile_library {lib_name files} {
     # Run the compiler via the project file
     puts "Compiling library $lib_name with [llength $files] files..."
     
+    # ADDED: Added "-L uvm" to map the precompiled UVM package macros and packages
     if {[catch { exec xvlog -work $lib_name -L uvm -prj $prj_filename } log_out]} {
         puts $log_out
         file delete -force $prj_filename
@@ -54,6 +56,7 @@ compile_library "sim_lib" $sim_files
 
 
 puts "Elaborating design top: $TESTBENCH_TOP into snapshot: $SNAPSHOT_NAME"
+# ADDED: Added "-L uvm" flag so xelab links the simulation snapshot with the built-in library
 set elab_output [exec xelab -debug typical -L uvm -L design_lib -L sim_lib -top $TESTBENCH_TOP -snapshot $SNAPSHOT_NAME]  
 
 set output_lines [split $elab_output "\n"]  
@@ -68,6 +71,7 @@ foreach line $output_lines {
 if {$local_fail} { error "ERROR: xelab finished with errors or strict warnings." }
 
 
-puts "Launching Vivado Simulator..."
+puts "Launching Vivado Simulator running UVM Test: $UVM_TEST..."
+# ADDED: Appended "-testplusarg" to tell the UVM runner which test pattern to execute
 set ale [exec xsim $SNAPSHOT_NAME --runall -testplusarg UVM_TESTNAME=$UVM_TEST]
 puts $ale
