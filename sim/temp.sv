@@ -1,34 +1,29 @@
-
 module tb;
 
-  parameter int MEM_SIZE = 8;
+  // rows and columns
 
-  parameter int ADDR_WIDTH = $clog2(MEM_SIZE);
+  // 8 rows and 4 columns
 
-  // this is initialized to zero
-  bit [15:0] mem[MEM_SIZE];
+  // it is unpacked
 
-  bit [ADDR_WIDTH-1:0] addr;
 
-  initial begin
 
-    $display("%d %d", MEM_SIZE, ADDR_WIDTH);
-    
+int array [0:7][0:3];  
 
-    // addr = {1'b1, {(ADDR_WIDTH-1){1'b0}}};
-    // addr = { {(ADDR_WIDTH-1){1'b0}}, 1'b1};
+initial begin
 
-    // es un buffer circular
-    
-    addr = ADDR_WIDTH'(9);
-    
-    mem[addr] = 16'hFFFF;
+  array[0][0] = 86;
+  array[1][0] = 42;
+  array[2][0] = 56;
+  
+  $display("i j value\n");
+  
+  // se esta moviendo en los rows;
 
-    foreach (mem[i]) begin
-      $display("%h", mem[i]);
-    end
+  foreach (array[i, j]) begin
+    $display("%0d %0d %0d", i, j, array[i][j]);
   end
 
+end
 
-endmodule: tb
-
+endmodule
